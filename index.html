@@ -1,0 +1,3242 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DriveBook">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#050508">
+<link rel="manifest" href="manifest.json">
+<title>DriveBook</title>
+<!-- fonts loaded locally -->
+<style>
+/* ═══════════════════════════════
+   RESET & TOKENS
+═══════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:    #050508;
+  --surf:  #0e0e14;
+  --surf2: #16161f;
+  --surf3: #1c1c27;
+  --bdr:   rgba(255,255,255,.07);
+  --bdr2:  rgba(255,255,255,.12);
+  --text:  #f0f0f5;
+  --t2:    #9090a8;
+  --t3:    #55556a;
+  --red:   #e8001e;
+  --red2:  #ff1f3a;
+  --gold:  #ffd600;
+  --green: #00e676;
+  --blue:  #4af;
+  --fh:    'Arial Narrow','Arial Narrow',Arial,sans-serif;
+  --fb:    -apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;
+  --safe-top: env(safe-area-inset-top,0px);
+  --safe-bot: env(safe-area-inset-bottom,0px);
+}
+
+html,body{
+  height:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--fb);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ═══════════════════════════════
+   PHONE SHELL
+═══════════════════════════════ */
+.app{
+  position:fixed;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  max-width:430px;
+  margin:0 auto;
+  background:var(--bg);
+  overflow:hidden;
+}
+
+/* ═══════════════════════════════
+   SCREENS
+═══════════════════════════════ */
+.screen{
+  display:none;
+  flex:1;
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:calc(70px + var(--safe-bot));
+}
+.screen.active{ display:block; }
+.screen-pad{ padding:0 16px; }
+
+/* ═══════════════════════════════
+   NAV BAR
+═══════════════════════════════ */
+.nav{
+  display:flex;
+  background:rgba(5,5,8,.92);
+  border-top:1px solid var(--bdr);
+  -webkit-backdrop-filter:blur(20px);
+  backdrop-filter:blur(20px);
+  padding-bottom:var(--safe-bot);
+  flex-shrink:0;
+}
+.nav-btn{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:10px 0 8px;
+  background:none;
+  border:none;
+  cursor:pointer;
+  gap:3px;
+  transition:opacity .15s;
+}
+.nav-btn:active{ opacity:.6; }
+.nav-icon{ font-size:22px; line-height:1; }
+.nav-lbl{
+  font-family:var(--fh);
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:1px;
+  color:var(--t3);
+  text-transform:uppercase;
+  transition:color .15s;
+}
+.nav-btn.on .nav-lbl{ color:var(--red); }
+.nav-btn.on .nav-icon{ filter:drop-shadow(0 0 6px rgba(232,0,30,.5)); }
+
+/* ═══════════════════════════════
+   TOP BAR
+═══════════════════════════════ */
+.topbar{
+  display:flex;
+  align-items:center;
+  padding:calc(var(--safe-top) + 12px) 16px 12px;
+  gap:10px;
+  flex-shrink:0;
+  position:relative;
+}
+.topbar-title{
+  font-family:var(--fh);
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  flex:1;
+}
+.back-btn{
+  width:36px; height:36px;
+  background:var(--surf2);
+  border:1px solid var(--bdr);
+  border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+  font-size:18px;
+  flex-shrink:0;
+}
+
+/* ═══════════════════════════════
+   LOGO
+═══════════════════════════════ */
+.logo{
+  font-family:var(--fh);
+  font-size:28px;
+  font-weight:900;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  line-height:1;
+}
+.logo span{ color:var(--red); }
+
+/* ═══════════════════════════════
+   CARDS
+═══════════════════════════════ */
+.card{
+  background:var(--surf);
+  border:1px solid var(--bdr);
+  border-radius:16px;
+  overflow:hidden;
+  margin-bottom:10px;
+}
+.card-head{
+  padding:14px 16px 10px;
+  border-bottom:1px solid var(--bdr);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.card-title{
+  font-family:var(--fh);
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  color:var(--t2);
+}
+.card-body{ padding:14px 16px; }
+
+/* Section label */
+.sec-lbl{
+  font-family:var(--fh);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--t3);
+  margin:18px 0 8px;
+}
+
+/* ═══════════════════════════════
+   BUTTONS
+═══════════════════════════════ */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  padding:10px 18px;
+  border-radius:10px;
+  border:none;
+  cursor:pointer;
+  font-family:var(--fh);
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  transition:opacity .15s, transform .1s;
+}
+.btn:active{ opacity:.7; transform:scale(.97); }
+.btn-red{ background:var(--red); color:#fff; }
+.btn-ghost{ background:var(--surf2); border:1px solid var(--bdr2); color:var(--text); }
+.btn-full{ width:100%; }
+
+/* ═══════════════════════════════
+   INPUT
+═══════════════════════════════ */
+.inp{
+  width:100%;
+  background:var(--surf2);
+  border:1px solid var(--bdr2);
+  border-radius:10px;
+  padding:11px 14px;
+  color:var(--text);
+  font-family:var(--fb);
+  font-size:14px;
+  outline:none;
+  -webkit-appearance:none;
+}
+.inp:focus{ border-color:rgba(232,0,30,.4); }
+textarea.inp{ resize:vertical; min-height:80px; }
+
+/* ═══════════════════════════════
+   HOME SCREEN
+═══════════════════════════════ */
+.home-hero{
+  padding:calc(var(--safe-top) + 20px) 16px 20px;
+  position:relative;
+  overflow:hidden;
+}
+.home-hero::before{
+  content:'';
+  position:absolute;
+  top:0; right:0;
+  width:200px; height:200px;
+  background:radial-gradient(circle,rgba(232,0,30,.12) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-greeting{
+  font-family:var(--fh);
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:3px;
+  color:var(--red);
+  text-transform:uppercase;
+  margin-bottom:4px;
+  opacity:.8;
+}
+.hero-name{
+  font-family:var(--fh);
+  font-size:48px;
+  font-weight:900;
+  line-height:1;
+  letter-spacing:-1px;
+  margin-bottom:2px;
+}
+.hero-name span{ color:var(--red); }
+.hero-sub{
+  font-family:var(--fh);
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:2px;
+  color:var(--t2);
+  text-transform:uppercase;
+}
+.hero-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:rgba(232,0,30,.1);
+  border:1px solid rgba(232,0,30,.2);
+  border-radius:20px;
+  padding:4px 12px;
+  margin-top:12px;
+  font-family:var(--fh);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:1.5px;
+  color:var(--red);
+  text-transform:uppercase;
+}
+
+/* Number badge */
+.num-21{
+  font-family:var(--fh);
+  font-size:72px;
+  font-weight:900;
+  color:transparent;
+  -webkit-text-stroke:2px rgba(232,0,30,.15);
+  position:absolute;
+  right:10px;
+  top:calc(var(--safe-top) + 10px);
+  line-height:1;
+  pointer-events:none;
+  letter-spacing:-2px;
+}
+
+/* Quick actions grid */
+.qa-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  padding:0 16px;
+  margin-bottom:8px;
+}
+.qa-card{
+  background:var(--surf);
+  border:1px solid var(--bdr);
+  border-radius:14px;
+  padding:16px 14px;
+  cursor:pointer;
+  transition:border-color .15s, background .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.qa-card:active{ background:var(--surf2); border-color:rgba(232,0,30,.3); }
+.qa-icon{ font-size:26px; margin-bottom:8px; display:block; }
+.qa-title{
+  font-family:var(--fh);
+  font-size:14px;
+  font-weight:800;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+  margin-bottom:2px;
+}
+.qa-sub{
+  font-family:var(--fb);
+  font-size:11px;
+  color:var(--t2);
+}
+.qa-card.qa-red{
+  background:rgba(232,0,30,.06);
+  border-color:rgba(232,0,30,.2);
+}
+.qa-card.qa-red .qa-title{ color:var(--red); }
+
+/* ═══════════════════════════════
+   CIRCUIT LIST
+═══════════════════════════════ */
+.circuit-item{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:14px 16px;
+  background:var(--surf);
+  border:1px solid var(--bdr);
+  border-radius:14px;
+  margin:0 16px 8px;
+  cursor:pointer;
+  transition:border-color .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.circuit-item:active{ border-color:rgba(232,0,30,.3); }
+.circuit-flag{ font-size:28px; flex-shrink:0; }
+.circuit-info{ flex:1; min-width:0; }
+.circuit-name{
+  font-family:var(--fh);
+  font-size:17px;
+  font-weight:800;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.circuit-meta{
+  font-size:11px;
+  color:var(--t2);
+  margin-top:2px;
+}
+.circuit-arrow{
+  color:var(--t3);
+  font-size:18px;
+  flex-shrink:0;
+}
+
+/* ═══════════════════════════════
+   CIRCUIT DETAIL
+═══════════════════════════════ */
+.circuit-hero{
+  padding:0 16px 16px;
+  border-bottom:1px solid var(--bdr);
+  margin-bottom:16px;
+}
+.circuit-hero-name{
+  font-family:var(--fh);
+  font-size:32px;
+  font-weight:900;
+  letter-spacing:-0.5px;
+  text-transform:uppercase;
+  line-height:1.1;
+}
+.circuit-hero-meta{
+  display:flex;
+  gap:12px;
+  margin-top:8px;
+  flex-wrap:wrap;
+}
+.chip{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  background:var(--surf2);
+  border:1px solid var(--bdr);
+  border-radius:6px;
+  padding:3px 8px;
+  font-family:var(--fh);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:1px;
+  color:var(--t2);
+  text-transform:uppercase;
+}
+
+/* Virage row */
+.virage-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 16px;
+  border-bottom:1px solid var(--bdr);
+  cursor:pointer;
+  transition:background .1s;
+  -webkit-tap-highlight-color:transparent;
+}
+.virage-row:last-child{ border-bottom:none; }
+.virage-row:active{ background:var(--surf2); }
+.virage-num{
+  font-family:var(--fh);
+  font-size:22px;
+  font-weight:900;
+  color:var(--red);
+  width:36px;
+  flex-shrink:0;
+  text-align:center;
+}
+.virage-info{ flex:1; min-width:0; }
+.virage-name{
+  font-family:var(--fh);
+  font-size:15px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.3px;
+}
+.virage-meta{ font-size:11px; color:var(--t2); margin-top:1px; }
+.diff-badge{
+  font-family:var(--fh);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:1px;
+  padding:2px 7px;
+  border-radius:4px;
+  text-transform:uppercase;
+  flex-shrink:0;
+}
+.diff-easy{ background:rgba(0,230,118,.1); color:var(--green); }
+.diff-med{ background:rgba(255,214,0,.1); color:var(--gold); }
+.diff-hard{ background:rgba(232,0,30,.1); color:var(--red); }
+.diff-trap{ background:rgba(255,100,0,.1); color:#ff6400; }
+
+/* ═══════════════════════════════
+   VIRAGE DETAIL
+═══════════════════════════════ */
+.virage-hero{
+  padding:16px;
+  background:linear-gradient(160deg,rgba(232,0,30,.08) 0%,transparent 60%);
+  border-bottom:1px solid var(--bdr);
+  margin-bottom:0;
+}
+.virage-hero-num{
+  font-family:var(--fh);
+  font-size:60px;
+  font-weight:900;
+  color:var(--red);
+  opacity:.15;
+  line-height:1;
+  position:absolute;
+  right:16px;
+  top:16px;
+}
+.virage-hero-name{
+  font-family:var(--fh);
+  font-size:26px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  position:relative;
+}
+.virage-hero-circuit{
+  font-size:12px;
+  color:var(--t2);
+  margin-top:4px;
+  font-weight:500;
+}
+
+/* KPI row */
+.kpi-row{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  border-bottom:1px solid var(--bdr);
+}
+.kpi-cell{
+  padding:12px 0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  border-right:1px solid var(--bdr);
+}
+.kpi-cell:last-child{ border-right:none; }
+.kpi-val{
+  font-family:var(--fh);
+  font-size:22px;
+  font-weight:900;
+  line-height:1;
+}
+.kpi-unit{
+  font-family:var(--fh);
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:1px;
+  color:var(--t3);
+  text-transform:uppercase;
+  margin-top:2px;
+}
+
+/* Pilotage block */
+.pil-block{
+  padding:14px 16px;
+  border-bottom:1px solid var(--bdr);
+}
+.pil-block:last-child{ border-bottom:none; }
+.pil-head{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:8px;
+}
+.pil-icon{
+  width:28px; height:28px;
+  border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px;
+  flex-shrink:0;
+}
+.pil-title{
+  font-family:var(--fh);
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+}
+.pil-text{
+  font-size:13px;
+  color:var(--t2);
+  line-height:1.6;
+}
+.pil-text strong{ color:var(--text); }
+
+/* Notes area */
+.note-area{
+  position:relative;
+  padding:14px 16px;
+  border-bottom:1px solid var(--bdr);
+}
+.note-label{
+  font-family:var(--fh);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:2px;
+  color:var(--t3);
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+
+/* ═══════════════════════════════
+   PHOTO SYSTEM
+═══════════════════════════════ */
+.photo-tabs{
+  display:flex;
+  gap:6px;
+  padding:12px 16px;
+  border-bottom:1px solid var(--bdr);
+  overflow-x:auto;
+}
+.photo-tab{
+  flex-shrink:0;
+  padding:7px 14px;
+  background:var(--surf2);
+  border:1px solid var(--bdr);
+  border-radius:8px;
+  font-family:var(--fh);
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:1px;
+  color:var(--t2);
+  cursor:pointer;
+  text-transform:uppercase;
+  transition:all .15s;
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+.photo-tab.on{
+  background:rgba(232,0,30,.1);
+  border-color:rgba(232,0,30,.3);
+  color:var(--red);
+}
+.photo-dot{
+  width:6px; height:6px;
+  background:var(--green);
+  border-radius:50%;
+}
+.photo-zone{
+  padding:16px;
+}
+.photo-upload{
+  border:2px dashed var(--bdr2);
+  border-radius:14px;
+  padding:32px;
+  text-align:center;
+  cursor:pointer;
+  transition:border-color .15s;
+}
+.photo-upload:active{ border-color:var(--red); }
+.photo-upload-icon{ font-size:36px; margin-bottom:8px; }
+.photo-upload-text{
+  font-family:var(--fh);
+  font-size:13px;
+  font-weight:700;
+  color:var(--t2);
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+.photo-preview{
+  border-radius:14px;
+  overflow:hidden;
+  position:relative;
+}
+.photo-preview img{
+  width:100%;
+  display:block;
+  max-height:300px;
+  object-fit:cover;
+}
+.photo-del{
+  position:absolute;
+  top:10px; right:10px;
+  background:rgba(0,0,0,.7);
+  border:none;
+  border-radius:8px;
+  color:#fff;
+  padding:6px 10px;
+  cursor:pointer;
+  font-size:12px;
+  font-family:var(--fh);
+  font-weight:700;
+}
+
+/* ═══════════════════════════════
+   CANVAS DRAWING
+═══════════════════════════════ */
+.canvas-wrap{
+  position:relative;
+  margin:0 16px 10px;
+  border-radius:14px;
+  overflow:hidden;
+  background:#0d0d16;
+  border:1px solid var(--bdr);
+}
+.draw-canvas{ display:block; width:100%; touch-action:none; }
+.draw-toolbar{
+  display:flex;
+  gap:6px;
+  padding:8px 16px;
+  background:var(--surf2);
+  border-top:1px solid var(--bdr);
+}
+.draw-tool{
+  padding:6px 10px;
+  background:var(--surf3);
+  border:1px solid var(--bdr);
+  border-radius:7px;
+  font-size:14px;
+  cursor:pointer;
+  transition:all .15s;
+}
+.draw-tool.on{
+  background:rgba(232,0,30,.15);
+  border-color:rgba(232,0,30,.4);
+}
+.draw-tool:last-child{ margin-left:auto; }
+
+/* ═══════════════════════════════
+   DEBRIEFING
+═══════════════════════════════ */
+.debrief-card{
+  background:var(--surf);
+  border:1px solid var(--bdr);
+  border-radius:14px;
+  margin:0 16px 10px;
+  overflow:hidden;
+}
+.debrief-card-head{
+  padding:12px 14px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  border-bottom:1px solid var(--bdr);
+}
+.debrief-circuit{
+  font-family:var(--fh);
+  font-size:15px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  flex:1;
+}
+.debrief-date{ font-size:11px; color:var(--t2); }
+.debrief-stars{ color:var(--gold); font-size:13px; letter-spacing:1px; }
+.debrief-body{ padding:12px 14px; }
+.debrief-tag{
+  display:inline-block;
+  background:var(--surf2);
+  border-radius:5px;
+  padding:2px 8px;
+  font-size:11px;
+  color:var(--t2);
+  margin:2px 2px 2px 0;
+  font-family:var(--fh);
+  font-weight:600;
+}
+.debrief-actions{
+  display:flex;
+  gap:6px;
+  padding:10px 14px;
+  border-top:1px solid var(--bdr);
+}
+
+/* Star rating */
+.star-row{ display:flex; gap:8px; margin:8px 0; }
+.star-btn{
+  font-size:28px;
+  background:none;
+  border:none;
+  cursor:pointer;
+  padding:2px;
+  opacity:.3;
+  transition:opacity .15s, transform .1s;
+}
+.star-btn.on{ opacity:1; }
+.star-btn:active{ transform:scale(1.2); }
+
+/* Point list */
+.point-item{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  padding:8px 0;
+  border-bottom:1px solid var(--bdr);
+}
+.point-item:last-child{ border-bottom:none; }
+.point-dot{
+  width:8px; height:8px;
+  border-radius:50%;
+  flex-shrink:0;
+  margin-top:5px;
+}
+.point-text{ font-size:13px; line-height:1.5; flex:1; }
+.point-del{
+  background:none;
+  border:none;
+  color:var(--t3);
+  font-size:18px;
+  cursor:pointer;
+  padding:0 4px;
+  line-height:1;
+}
+
+/* ═══════════════════════════════
+   CHECKLIST
+═══════════════════════════════ */
+.progress-bar-wrap{
+  background:var(--surf2);
+  border-radius:4px;
+  height:6px;
+  overflow:hidden;
+  margin:10px 0;
+}
+.progress-bar{
+  height:100%;
+  border-radius:4px;
+  background:var(--red);
+  transition:width .4s ease;
+}
+.check-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:11px 0;
+  border-bottom:1px solid var(--bdr);
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.check-item:last-child{ border-bottom:none; }
+.check-box{
+  width:24px; height:24px;
+  border-radius:7px;
+  border:2px solid var(--t3);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+  transition:all .15s;
+}
+.check-box.done{
+  background:var(--green);
+  border-color:var(--green);
+}
+.check-label{
+  flex:1;
+  font-size:13px;
+  line-height:1.4;
+  transition:color .15s;
+}
+.check-label.done{
+  text-decoration:line-through;
+  color:var(--t3);
+}
+
+/* ═══════════════════════════════
+   TOAST
+═══════════════════════════════ */
+.toast{
+  position:fixed;
+  bottom:calc(80px + var(--safe-bot));
+  left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:rgba(30,30,40,.95);
+  border:1px solid var(--bdr2);
+  border-radius:20px;
+  padding:10px 20px;
+  font-family:var(--fh);
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:1px;
+  opacity:0;
+  transition:opacity .2s, transform .2s;
+  pointer-events:none;
+  z-index:9999;
+  white-space:nowrap;
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
+}
+.toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
+/* ═══════════════════════════════
+   METEO WIDGET
+═══════════════════════════════ */
+.meteo-card{
+  margin:0 16px 10px;
+  background:var(--surf);
+  border:1px solid var(--bdr);
+  border-radius:14px;
+  overflow:hidden;
+}
+.meteo-main{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:14px;
+  cursor:pointer;
+}
+.meteo-icon{ font-size:36px; flex-shrink:0; }
+.meteo-info{ flex:1; }
+.meteo-loc{
+  font-family:var(--fh);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:2px;
+  color:var(--t3);
+  text-transform:uppercase;
+}
+.meteo-temp{
+  font-family:var(--fh);
+  font-size:32px;
+  font-weight:900;
+  line-height:1;
+}
+.meteo-desc{ font-size:12px; color:var(--t2); margin-top:2px; }
+.meteo-search{
+  display:flex;
+  gap:6px;
+  padding:10px 12px 12px;
+  border-top:1px solid var(--bdr);
+}
+.meteo-inp{
+  flex:1;
+  background:var(--surf2);
+  border:1px solid var(--bdr2);
+  border-radius:8px;
+  padding:8px 12px;
+  color:var(--text);
+  font-family:var(--fb);
+  font-size:13px;
+  outline:none;
+}
+.meteo-search-btn{
+  background:var(--surf2);
+  border:1px solid var(--bdr2);
+  border-radius:8px;
+  padding:8px 12px;
+  color:var(--text);
+  cursor:pointer;
+  font-size:14px;
+}
+
+/* ═══════════════════════════════
+   SPLASH SCREEN
+═══════════════════════════════ */
+#splash{
+  position:fixed;
+  inset:0;
+  background:var(--bg);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  z-index:99999;
+  gap:8px;
+}
+.splash-logo{
+  font-family:var(--fh);
+  font-size:56px;
+  font-weight:900;
+  letter-spacing:4px;
+  text-transform:uppercase;
+  animation:splashPulse 1.5s ease infinite;
+}
+.splash-logo span{ color:var(--red); }
+.splash-num{
+  font-family:var(--fh);
+  font-size:18px;
+  font-weight:700;
+  letter-spacing:6px;
+  color:var(--t3);
+  text-transform:uppercase;
+}
+.splash-bar-wrap{
+  width:120px;
+  height:2px;
+  background:var(--surf2);
+  border-radius:2px;
+  margin-top:20px;
+  overflow:hidden;
+}
+.splash-bar{
+  height:100%;
+  background:var(--red);
+  border-radius:2px;
+  animation:splashLoad 1.2s ease forwards;
+}
+@keyframes splashPulse{
+  0%,100%{ opacity:1; }
+  50%{ opacity:.7; }
+}
+@keyframes splashLoad{
+  0%{ width:0; }
+  100%{ width:100%; }
+}
+
+/* ═══════════════════════════════
+   VIRAGE FORM FIELD
+═══════════════════════════════ */
+.vf-card{
+  background:var(--surf);
+  border:1px solid var(--bdr);
+  border-radius:14px;
+  margin-bottom:8px;
+  overflow:hidden;
+}
+.vf-head{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 14px;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.vf-head:active{ background:var(--surf2); }
+.vf-num{
+  font-family:'Arial Narrow',Arial,sans-serif;
+  font-size:20px;
+  font-weight:900;
+  color:var(--red);
+  width:32px;
+  flex-shrink:0;
+  text-align:center;
+}
+.vf-name-preview{
+  flex:1;
+  font-family:'Arial Narrow',Arial,sans-serif;
+  font-size:14px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.3px;
+}
+.vf-toggle{ color:var(--t3); font-size:14px; }
+.vf-body{
+  padding:0 14px 14px;
+  border-top:1px solid var(--bdr);
+  display:none;
+}
+.vf-body.open{ display:block; }
+.vf-del{
+  background:none;
+  border:none;
+  color:var(--red);
+  font-size:20px;
+  cursor:pointer;
+  padding:0 4px;
+  line-height:1;
+}
+
+/* ═══════════════════════════════
+   FORM ELEMENTS
+═══════════════════════════════ */
+.form-row{
+  display:flex;
+  gap:8px;
+  margin-bottom:10px;
+}
+.form-row .inp{ flex:1; }
+.form-label{
+  font-family:var(--fh);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:1.5px;
+  color:var(--t3);
+  text-transform:uppercase;
+  margin-bottom:5px;
+  display:block;
+}
+.form-group{ margin-bottom:14px; }
+
+/* Toggle buttons */
+.toggle-row{ display:flex; gap:6px; }
+.toggle-btn{
+  flex:1;
+  padding:9px;
+  background:var(--surf2);
+  border:1px solid var(--bdr);
+  border-radius:8px;
+  font-family:var(--fh);
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:1px;
+  color:var(--t2);
+  cursor:pointer;
+  text-transform:uppercase;
+  text-align:center;
+  transition:all .15s;
+}
+.toggle-btn.on{
+  background:rgba(232,0,30,.1);
+  border-color:rgba(232,0,30,.3);
+  color:var(--red);
+}
+
+/* ═══════════════════════════════
+   ANIMATIONS
+═══════════════════════════════ */
+@keyframes fadeUp{
+  from{ opacity:0; transform:translateY(12px); }
+  to{ opacity:1; transform:translateY(0); }
+}
+.anim{ animation:fadeUp .3s ease both; }
+.anim-1{ animation-delay:.05s; }
+.anim-2{ animation-delay:.1s; }
+.anim-3{ animation-delay:.15s; }
+.anim-4{ animation-delay:.2s; }
+.anim-5{ animation-delay:.25s; }
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-logo">DRIVE<span>BOOK</span></div>
+  <div class="splash-num">N° 21</div>
+  <div class="splash-bar-wrap"><div class="splash-bar"></div></div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app" style="display:none">
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ══════════════ HOME ══════════════ -->
+  <div class="screen active" id="s-home">
+    <div class="home-hero">
+      <div class="num-21">21</div>
+      <div class="hero-greeting anim">Carnet de bord pilote</div>
+      <div class="hero-name anim anim-1">DRIVE<span>BOOK</span></div>
+      <div class="hero-badge anim anim-2">🏎 Proto / LMP · N°21</div>
+    </div>
+
+    <!-- Météo widget -->
+    <div class="meteo-card anim anim-3" id="meteo-card">
+      <div class="meteo-main" onclick="fetchMeteo()">
+        <div class="meteo-icon" id="meteo-icon">⏳</div>
+        <div class="meteo-info">
+          <div class="meteo-loc" id="meteo-loc">CHARGEMENT...</div>
+          <div class="meteo-temp" id="meteo-temp">—°</div>
+          <div class="meteo-desc" id="meteo-desc">Météo en direct</div>
+        </div>
+        <div style="color:var(--t3);font-size:12px;">↻</div>
+      </div>
+      <div class="meteo-search">
+        <input class="meteo-inp" id="meteo-inp" type="text" placeholder="Ville, ex: Le Mans...">
+        <button class="meteo-search-btn" onclick="meteoSearch()">→</button>
+        <button class="meteo-search-btn" onclick="meteoGPS()">📍</button>
+      </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="sec-lbl" style="padding:0 16px;" >ACCÈS RAPIDE</div>
+    <div class="qa-grid anim anim-4">
+      <div class="qa-card qa-red" onclick="goTo('s-circuits')">
+        <span class="qa-icon">🏁</span>
+        <div class="qa-title">Circuits</div>
+        <div class="qa-sub" id="stat-circuits">6 circuits</div>
+      </div>
+      <div class="qa-card" onclick="goTo('s-debrief')">
+        <span class="qa-icon">📋</span>
+        <div class="qa-title">Débriefing</div>
+        <div class="qa-sub" id="stat-debriefs">0 sessions</div>
+      </div>
+      <div class="qa-card" onclick="goTo('s-check')">
+        <span class="qa-icon">✅</span>
+        <div class="qa-title">Checklist</div>
+        <div class="qa-sub" id="stat-check">Pré-session</div>
+      </div>
+      <div class="qa-card" onclick="goTo('s-pdf')">
+        <span class="qa-icon">📄</span>
+        <div class="qa-title">Export PDF</div>
+        <div class="qa-sub">Rapport session</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ CIRCUITS LIST ══════════════ -->
+  <div class="screen" id="s-circuits">
+    <div class="topbar">
+      <div class="topbar-title">Circuits</div>
+      <button class="btn btn-red" onclick="openCircuitForm(-1)" style="padding:8px 14px;font-size:12px;">+ NOUVEAU</button>
+    </div>
+    <div id="circuits-list"></div>
+  </div>
+
+  <!-- ══════════════ CIRCUIT DETAIL ══════════════ -->
+  <div class="screen" id="s-circuit">
+    <div class="topbar">
+      <div class="back-btn" onclick="goBack()">←</div>
+      <div class="topbar-title" id="circuit-title">Circuit</div>
+      <div id="circuit-actions"></div>
+    </div>
+    <div class="circuit-hero" style="padding-top:0" id="circuit-hero"></div>
+    <div class="card" style="margin:0 16px 10px;border-radius:0 0 14px 14px;margin-top:-10px;" id="circuit-virages"></div>
+  </div>
+
+  <!-- ══════════════ VIRAGE DETAIL ══════════════ -->
+  <div class="screen" id="s-virage">
+    <div class="topbar">
+      <div class="back-btn" onclick="goBack()">←</div>
+      <div class="topbar-title" id="virage-title">Virage</div>
+    </div>
+    <div id="virage-content"></div>
+  </div>
+
+  <!-- ══════════════ DEBRIEF LIST ══════════════ -->
+  <div class="screen" id="s-debrief">
+    <div class="topbar">
+      <div class="topbar-title">Débriefing</div>
+      <button class="btn btn-red" onclick="openDebriefForm(-1)" style="padding:8px 14px;font-size:12px;">+ NOUVEAU</button>
+    </div>
+    <div id="debrief-list" style="padding-bottom:20px;"></div>
+  </div>
+
+  <!-- ══════════════ DEBRIEF FORM ══════════════ -->
+  <div class="screen" id="s-debrief-form">
+    <div class="topbar">
+      <div class="back-btn" onclick="goBack()">←</div>
+      <div class="topbar-title" id="df-title">Nouveau débrief</div>
+    </div>
+    <div class="screen-pad" style="padding-top:10px;padding-bottom:30px;">
+
+      <div class="form-group">
+        <label class="form-label">Circuit</label>
+        <select class="inp" id="df-circuit"></select>
+      </div>
+
+      <div class="form-row">
+        <div style="flex:1">
+          <label class="form-label">Date</label>
+          <input class="inp" type="date" id="df-date">
+        </div>
+        <div style="flex:1">
+          <label class="form-label">Meilleur tour</label>
+          <input class="inp" type="text" id="df-lap" placeholder="1:24.567">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Conditions</label>
+        <div class="toggle-row">
+          <div class="toggle-btn on" id="cond-sec" onclick="setCondition('sec')">☀ SEC</div>
+          <div class="toggle-btn" id="cond-wet" onclick="setCondition('wet')">🌧 MOUILLÉ</div>
+          <div class="toggle-btn" id="cond-mix" onclick="setCondition('mix')">⛅ MIXTE</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Note de session</label>
+        <div class="star-row" id="df-stars">
+          <button class="star-btn on" onclick="setStar(1)">★</button>
+          <button class="star-btn" onclick="setStar(2)">★</button>
+          <button class="star-btn" onclick="setStar(3)">★</button>
+          <button class="star-btn" onclick="setStar(4)">★</button>
+          <button class="star-btn" onclick="setStar(5)">★</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Points positifs</label>
+        <div id="pts-pos-list"></div>
+        <div style="display:flex;gap:6px;margin-top:6px;">
+          <input class="inp" id="pts-pos-inp" placeholder="Ajouter un point...">
+          <button class="btn btn-ghost" onclick="addPoint('pos')">+</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">À améliorer</label>
+        <div id="pts-neg-list"></div>
+        <div style="display:flex;gap:6px;margin-top:6px;">
+          <input class="inp" id="pts-neg-inp" placeholder="Ajouter un point...">
+          <button class="btn btn-ghost" onclick="addPoint('neg')">+</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Actions ingénieur</label>
+        <div id="pts-act-list"></div>
+        <div style="display:flex;gap:6px;margin-top:6px;">
+          <input class="inp" id="pts-act-inp" placeholder="Ajouter une action...">
+          <button class="btn btn-ghost" onclick="addPoint('act')">+</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Notes libres</label>
+        <textarea class="inp" id="df-notes" placeholder="Observations, setup, ressentis..."></textarea>
+      </div>
+
+      <button class="btn btn-red btn-full" onclick="saveDebrief()" style="margin-bottom:10px;">SAUVEGARDER</button>
+      <button class="btn btn-ghost btn-full" onclick="goBack()">ANNULER</button>
+    </div>
+  </div>
+
+  <!-- ══════════════ CHECKLIST ══════════════ -->
+  <div class="screen" id="s-check">
+    <div class="topbar">
+      <div class="topbar-title">Checklist</div>
+      <button class="btn btn-ghost" onclick="resetCheck()" style="padding:7px 12px;font-size:11px;">RESET</button>
+    </div>
+    <div class="screen-pad" style="padding-top:6px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="font-family:var(--fh);font-size:13px;color:var(--t2);" id="check-count">0/0</div>
+        <div id="check-pct" style="font-family:var(--fh);font-size:20px;font-weight:900;color:var(--red);">0%</div>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="check-bar" style="width:0%"></div></div>
+      <div id="check-list" style="margin-top:10px;"></div>
+      <div class="sec-lbl" style="margin-top:20px;">Ajouter un élément</div>
+      <div style="display:flex;gap:8px;">
+        <input class="inp" id="check-new" placeholder="Nouvel élément...">
+        <button class="btn btn-red" onclick="addCheckItem()">+</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ PDF EXPORT ══════════════ -->
+  <div class="screen" id="s-pdf">
+    <div class="topbar">
+      <div class="topbar-title">Export PDF</div>
+    </div>
+    <div class="screen-pad" style="padding-top:10px;">
+      <div class="card" style="margin:0 0 10px;">
+        <div class="card-head"><div class="card-title">Sélectionner un débrief</div></div>
+        <div class="card-body" id="pdf-list"></div>
+      </div>
+      <button class="btn btn-red btn-full" onclick="exportPDF()" id="pdf-btn">📄 GÉNÉRER PDF</button>
+    </div>
+  </div>
+
+
+  <!-- ══════════════ SETTINGS ══════════════ -->
+  <div class="screen" id="s-settings">
+    <div class="topbar">
+      <div class="topbar-title">Réglages</div>
+    </div>
+    <div class="screen-pad" style="padding-top:10px;padding-bottom:30px;">
+
+      <!-- Profil pilote -->
+      <div class="sec-lbl">PROFIL PILOTE</div>
+      <div class="card" style="margin:0 0 10px;">
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Prénom</label>
+            <input class="inp" id="set-prenom" placeholder="Ton prénom">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nom</label>
+            <input class="inp" id="set-nom" placeholder="Ton nom">
+          </div>
+          <div class="form-row">
+            <div style="flex:1">
+              <label class="form-label">Numéro</label>
+              <input class="inp" id="set-numero" placeholder="21" type="number" min="1" max="999">
+            </div>
+            <div style="flex:2">
+              <label class="form-label">Voiture</label>
+              <input class="inp" id="set-voiture" placeholder="Ex: Oreca 07">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Équipe</label>
+            <input class="inp" id="set-equipe" placeholder="Nom de l'équipe">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Catégorie</label>
+            <select class="inp" id="set-categorie">
+              <option value="PROTO / LMP">PROTO / LMP</option>
+              <option value="GT3">GT3</option>
+              <option value="GT4">GT4</option>
+              <option value="TCR">TCR</option>
+              <option value="FUNBOX">FUNBOX</option>
+              <option value="AUTRE">AUTRE</option>
+            </select>
+          </div>
+          <button class="btn btn-red btn-full" onclick="saveProfil()">SAUVEGARDER LE PROFIL</button>
+        </div>
+      </div>
+
+      <!-- Apparence -->
+      <div class="sec-lbl">APPARENCE</div>
+      <div class="card" style="margin:0 0 10px;">
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Thème</label>
+            <div class="toggle-row">
+              <div class="toggle-btn" id="theme-dark" onclick="setTheme('dark')">🌑 SOMBRE</div>
+              <div class="toggle-btn" id="theme-light" onclick="setTheme('light')">☀ CLAIR</div>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Langue</label>
+            <div class="toggle-row">
+              <div class="toggle-btn" id="lang-fr" onclick="setLang('fr')">🇫🇷 FRANÇAIS</div>
+              <div class="toggle-btn" id="lang-en" onclick="setLang('en')">🇬🇧 ENGLISH</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Données -->
+      <div class="sec-lbl">DONNÉES</div>
+      <div class="card" style="margin:0 0 10px;">
+        <div class="card-body" style="display:flex;flex-direction:column;gap:8px;">
+          <button class="btn btn-ghost btn-full" onclick="exportData()">📤 EXPORTER (JSON)</button>
+          <label class="btn btn-ghost btn-full" for="import-file" style="cursor:pointer;">📥 IMPORTER (JSON)</label>
+          <input type="file" accept=".json" id="import-file" style="display:none" onchange="importData(event)">
+          <button class="btn btn-ghost btn-full" style="color:var(--red);" onclick="confirmReset()">🗑 RÉINITIALISER TOUT</button>
+        </div>
+      </div>
+
+      <!-- À propos -->
+      <div class="sec-lbl">À PROPOS</div>
+      <div class="card" style="margin:0 0 10px;">
+        <div class="card-body" style="text-align:center;">
+          <div style="font-family:var(--fh);font-size:32px;font-weight:900;letter-spacing:3px;margin-bottom:4px;">DRIVE<span style="color:var(--red);">BOOK</span></div>
+          <div id="set-version-num" style="font-family:var(--fh);font-size:14px;color:var(--t3);letter-spacing:2px;">N° 21</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:8px;">Carnet de bord pilote LMP</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ══════════════ CIRCUIT FORM ══════════════ -->
+  <div class="screen" id="s-circuit-form">
+    <div class="topbar">
+      <div class="back-btn" onclick="goBack()">←</div>
+      <div class="topbar-title" id="cf-title">Nouveau circuit</div>
+    </div>
+    <div class="screen-pad" style="padding-top:10px;padding-bottom:40px;">
+
+      <!-- Infos générales -->
+      <div class="sec-lbl">INFOS GÉNÉRALES</div>
+      <div class="card" style="margin:0 0 10px;">
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Nom du circuit</label>
+            <input class="inp" id="cf-name" placeholder="Ex: MONZA">
+          </div>
+          <div class="form-row">
+            <div style="flex:2">
+              <label class="form-label">Pays</label>
+              <input class="inp" id="cf-country" placeholder="Ex: Italie">
+            </div>
+            <div style="flex:1">
+              <label class="form-label">Drapeau</label>
+              <input class="inp" id="cf-flag" placeholder="🇮🇹" style="font-size:20px;text-align:center;">
+            </div>
+          </div>
+          <div class="form-row">
+            <div style="flex:1">
+              <label class="form-label">Longueur (km)</label>
+              <input class="inp" id="cf-km" placeholder="5.793" type="text">
+            </div>
+            <div style="flex:1">
+              <label class="form-label">Nb virages</label>
+              <input class="inp" id="cf-turns" placeholder="11" type="number">
+            </div>
+            <div style="flex:1">
+              <label class="form-label">Record</label>
+              <input class="inp" id="cf-record" placeholder="1:19">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Virages -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:18px 0 8px;">
+        <div class="sec-lbl" style="margin:0;">VIRAGES</div>
+        <button class="btn btn-ghost" onclick="addVirageField()" style="padding:6px 12px;font-size:11px;">+ AJOUTER</button>
+      </div>
+      <div id="cf-virages-list"></div>
+
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">
+        <button class="btn btn-red btn-full" onclick="saveCircuitForm()">SAUVEGARDER LE CIRCUIT</button>
+        <button class="btn btn-ghost btn-full" onclick="goBack()">ANNULER</button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ══════════════ CIRCUIT FORM ══════════════ -->
+  <div class="screen" id="s-circuit-form">
+    <div class="topbar">
+      <div class="back-btn" onclick="goBack()">←</div>
+      <div class="topbar-title" id="cf-title">Nouveau circuit</div>
+    </div>
+    <div class="screen-pad" style="padding-top:10px;padding-bottom:30px;">
+
+      <!-- Infos circuit -->
+      <div class="sec-lbl">INFOS CIRCUIT</div>
+      <div class="card" style="margin:0 0 12px;">
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Nom du circuit</label>
+            <input class="inp" id="cf-name" placeholder="Ex: CIRCUIT DE LA SARTHE">
+          </div>
+          <div class="form-row">
+            <div style="flex:2">
+              <label class="form-label">Pays</label>
+              <input class="inp" id="cf-country" placeholder="Ex: France">
+            </div>
+            <div style="flex:1">
+              <label class="form-label">Drapeau</label>
+              <input class="inp" id="cf-flag" placeholder="🇫🇷" style="font-size:20px;text-align:center;">
+            </div>
+          </div>
+          <div class="form-row">
+            <div style="flex:1">
+              <label class="form-label">Longueur (km)</label>
+              <input class="inp" id="cf-km" placeholder="5.842" type="number" step="0.001">
+            </div>
+            <div style="flex:1">
+              <label class="form-label">Record</label>
+              <input class="inp" id="cf-record" placeholder="1:48.555">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Virages -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div class="sec-lbl" style="margin:0;">VIRAGES</div>
+        <button class="btn btn-ghost" onclick="openVirageForm(-1)" style="padding:7px 12px;font-size:11px;">+ AJOUTER</button>
+      </div>
+      <div id="cf-virages-list" style="margin-bottom:12px;"></div>
+
+      <button class="btn btn-red btn-full" onclick="saveCircuit()" style="margin-bottom:8px;">SAUVEGARDER LE CIRCUIT</button>
+      <button class="btn btn-ghost btn-full" onclick="goBack()">ANNULER</button>
+    </div>
+  </div>
+
+  <!-- ══════════════ VIRAGE FORM ══════════════ -->
+  <div class="screen" id="s-virage-form">
+    <div class="topbar">
+      <div class="back-btn" onclick="goBack()">←</div>
+      <div class="topbar-title" id="vf-title">Nouveau virage</div>
+    </div>
+    <div class="screen-pad" style="padding-top:10px;padding-bottom:30px;">
+
+      <div class="form-row">
+        <div style="flex:1">
+          <label class="form-label">Numéro</label>
+          <input class="inp" id="vf-num" placeholder="01">
+        </div>
+        <div style="flex:3">
+          <label class="form-label">Nom</label>
+          <input class="inp" id="vf-name" placeholder="Ex: EAU ROUGE">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <div class="toggle-row" style="flex-wrap:wrap;gap:6px;">
+          <div class="toggle-btn on" id="vft-rapide" onclick="setVirageType('rapide')" style="flex:none;padding:8px 12px;">RAPIDE</div>
+          <div class="toggle-btn" id="vft-moyenne" onclick="setVirageType('moyenne')" style="flex:none;padding:8px 12px;">MOYENNE</div>
+          <div class="toggle-btn" id="vft-epingle" onclick="setVirageType('epingle')" style="flex:none;padding:8px 12px;">ÉPINGLE</div>
+          <div class="toggle-btn" id="vft-chicane" onclick="setVirageType('chicane')" style="flex:none;padding:8px 12px;">CHICANE</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Difficulté</label>
+        <div class="toggle-row">
+          <div class="toggle-btn" id="vfd-easy" onclick="setVirageDiff('easy')">FACILE</div>
+          <div class="toggle-btn on" id="vfd-med" onclick="setVirageDiff('med')">MOYEN</div>
+          <div class="toggle-btn" id="vfd-hard" onclick="setVirageDiff('hard')">DIFFICILE</div>
+          <div class="toggle-btn" id="vfd-trap" onclick="setVirageDiff('trap')">PIÈGE</div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div style="flex:1">
+          <label class="form-label">Vitesse (km/h)</label>
+          <input class="inp" id="vf-speed" placeholder="180" type="number">
+        </div>
+        <div style="flex:1">
+          <label class="form-label">Rapport</label>
+          <input class="inp" id="vf-gear" placeholder="4" type="number" min="1" max="8">
+        </div>
+        <div style="flex:1">
+          <label class="form-label">Freinage (m)</label>
+          <input class="inp" id="vf-brake" placeholder="100" type="number">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Texte de pilotage</label>
+        <textarea class="inp" id="vf-fr" placeholder="Freinage au panneau 100, corde tardive..." style="min-height:90px;"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Notes personnelles</label>
+        <textarea class="inp" id="vf-notes" placeholder="Tes observations..." style="min-height:70px;"></textarea>
+      </div>
+
+      <button class="btn btn-red btn-full" onclick="saveVirageForm()" style="margin-bottom:8px;">VALIDER CE VIRAGE</button>
+      <button class="btn btn-ghost btn-full" onclick="goBack()">ANNULER</button>
+    </div>
+  </div>
+
+  <!-- ══════════════ NAV BAR ══════════════ -->
+  <div class="nav">
+    <button class="nav-btn on" id="nav-home" onclick="goTo('s-home')">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-lbl">Accueil</span>
+    </button>
+    <button class="nav-btn" id="nav-circuits" onclick="goTo('s-circuits')">
+      <span class="nav-icon">🏁</span>
+      <span class="nav-lbl">Circuits</span>
+    </button>
+    <button class="nav-btn" id="nav-debrief" onclick="goTo('s-debrief')">
+      <span class="nav-icon">📋</span>
+      <span class="nav-lbl">Débrief</span>
+    </button>
+    <button class="nav-btn" id="nav-check" onclick="goTo('s-check')">
+      <span class="nav-icon">✅</span>
+      <span class="nav-lbl">Check</span>
+    </button>
+    <button class="nav-btn" id="nav-settings" onclick="goTo('s-settings');loadProfilForm();">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-lbl">Réglages</span>
+    </button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   PURE ES5 — NO ARROW FUNCTIONS
+   NO TEMPLATE LITERALS — NO CONST/LET
+   NO EXTERNAL DEPENDENCIES
+═══════════════════════════════════════ */
+
+/* ── SAFE STORAGE ── */
+var _mem = {};
+var _lsOk = (function() {
+  try { localStorage.setItem('__t','1'); localStorage.removeItem('__t'); return true; }
+  catch(e) { return false; }
+})();
+function lsGet(k) {
+  if (_lsOk) { try { return localStorage.getItem(k); } catch(e){} }
+  return (_mem[k] !== undefined) ? _mem[k] : null;
+}
+function lsSet(k, v) {
+  if (_lsOk) { try { localStorage.setItem(k, v); return; } catch(e){} }
+  _mem[k] = v;
+}
+function lsRem(k) {
+  if (_lsOk) { try { localStorage.removeItem(k); } catch(e){} }
+  delete _mem[k];
+}
+
+/* ── CIRCUITS DATA ── */
+var CIRCUITS = [
+  {id:'spa', name:'SPA-FRANCORCHAMPS', country:'Belgique', flag:'🇧🇪', km:'7.004', turns:19, record:'3:14',
+   virages:[
+    {num:'01', name:'LA SOURCE', type:'ÉPINGLE', diff:'med', speed:'~110', gear:'2',
+     fr:'Freinage fort panneau 100. Serrage à gauche, corde à droite. Late apex.'},
+    {num:'03', name:'EAU ROUGE / RAIDILLON', type:'RAPIDE', diff:'trap', speed:'~310', gear:'8',
+     fr:'Quasi plein gaz en LMP. Légère compression. Ligne rive droite en bas.'},
+    {num:'09', name:'POUHON', type:'RAPIDE', diff:'hard', speed:'~245', gear:'6',
+     fr:'Léger lever de pied. Double gauche rapide. Corde au 2e sommet.'},
+    {num:'14', name:'BUS STOP CHICANE', type:'CHICANE', diff:'med', speed:'~80', gear:'2',
+     fr:'Freinage fort, privilege le 2e apex. Sortie rapide vers ligne droite.'}
+   ]},
+  {id:'ricard', name:'PAUL RICARD', country:'France', flag:'🇫🇷', km:'5.842', turns:15, record:'1:48',
+   virages:[
+    {num:'01', name:'SAINTE-BAUME', type:'ÉPINGLE', diff:'med', speed:'~120', gear:'2',
+     fr:'Freinage au panneau 100. Corde tardive. Sortie en accélération franche.'},
+    {num:'06', name:'SIGNES', type:'RAPIDE', diff:'hard', speed:'~285', gear:'7',
+     fr:'Lever de pied léger à 285 km/h. Très technique, corde précise.'},
+    {num:'09', name:'BEAUSSET', type:'MOYENNE', diff:'med', speed:'~175', gear:'4',
+     fr:'Freinage modéré, trajectoire intérieure. Pivot net pour sortie optimale.'},
+    {num:'13', name:'CAMP', type:'ÉPINGLE', diff:'med', speed:'~100', gear:'2',
+     fr:'Freinage fort panneau 50. Corde tardive. Priorité sur sortie longue.'}
+   ]},
+  {id:'silverstone', name:'SILVERSTONE', country:'Angleterre', flag:'🇬🇧', km:'5.891', turns:18, record:'1:24',
+   virages:[
+    {num:'01', name:'COPSE', type:'RAPIDE', diff:'trap', speed:'~270', gear:'6',
+     fr:'Quasi aucun freinage en LMP. Trajectoire extérieure-intérieure-extérieure.'},
+    {num:'04', name:'MAGGOTS/BECKETTS', type:'RAPIDE', diff:'trap', speed:'~240', gear:'5',
+     fr:'Enchaînement fluide. Pas de correction brutale. Flux aérodynamique critique.'},
+    {num:'11', name:'STOWE', type:'MOYENNE', diff:'med', speed:'~160', gear:'4',
+     fr:'Freinage panneau 100. Angle d\'attaque progressif. Sortie propre.'},
+    {num:'16', name:'CLUB', type:'MOYENNE', diff:'med', speed:'~155', gear:'4',
+     fr:'Freinage modéré. Dernier virage important pour ligne droite départ.'}
+   ]},
+  {id:'lemans', name:'LE MANS', country:'France (Sarthe)', flag:'🇫🇷', km:'13.626', turns:38, record:'3:22',
+   virages:[
+    {num:'01', name:'DUNLOP', type:'MOYENNE', diff:'med', speed:'~160', gear:'4',
+     fr:'Freinage fort sous le pont. Corde nette. Sortie vers épingle Ford.'},
+    {num:'06', name:'TERTRE ROUGE', type:'RAPIDE', diff:'hard', speed:'~300', gear:'7',
+     fr:'Lever de pied léger. Entrée sur vibreurs intérieurs. Plein gaz dès sommet.'},
+    {num:'20', name:'MULSANNE CORNER', type:'ÉPINGLE', diff:'trap', speed:'~100', gear:'2',
+     fr:'Freinage très fort. Vitesse d\'entrée critique. Late apex obligatoire.'},
+    {num:'30', name:'FORD CHICANES', type:'CHICANE', diff:'med', speed:'~120', gear:'3',
+     fr:'Freinage modéré, enchaînement précis. Vibreurs utilisables en LMP.'}
+   ]},
+  {id:'barcelona', name:'BARCELONE', country:'Espagne', flag:'🇪🇸', km:'4.675', turns:16, record:'1:16',
+   virages:[
+    {num:'01', name:'T1/T2', type:'ÉPINGLE', diff:'med', speed:'~105', gear:'2',
+     fr:'Freinage fort panneau 100. Double apex. Sortie plein gaz vers T3.'},
+    {num:'05', name:'REPSOL T5', type:'RAPIDE', diff:'hard', speed:'~215', gear:'5',
+     fr:'Lever de pied léger. Très technique. Appui aéro maximal nécessaire.'},
+    {num:'09', name:'T9', type:'MOYENNE', diff:'med', speed:'~165', gear:'4',
+     fr:'Freinage panneau 100. Corde précise. Sortie vers ligne droite principale.'},
+    {num:'16', name:'BANC T16', type:'ÉPINGLE', diff:'med', speed:'~95', gear:'2',
+     fr:'Freinage fort. Dernier virage. Late apex pour sortie optimale.'}
+   ]},
+  {id:'portimao', name:'PORTIMÃO', country:'Portugal', flag:'🇵🇹', km:'4.653', turns:15, record:'1:19',
+   virages:[
+    {num:'01', name:'T1 EN AVEUGLE', type:'ÉPINGLE', diff:'trap', speed:'~115', gear:'2',
+     fr:'Freinage fort en aveugle. Crête à mi-freinage. Confiance totale requise.'},
+    {num:'04', name:'T4 LONGUE COURBE', type:'RAPIDE', diff:'hard', speed:'~240', gear:'6',
+     fr:'Lever de pied progressif. Longue droite rapide. Équilibre aéro crucial.'},
+    {num:'08', name:'T8 GAUCHE RAPIDE', type:'RAPIDE', diff:'hard', speed:'~210', gear:'5',
+     fr:'Quasi plein gaz. Point de corde en aveugle. Références visuelles limitées.'},
+    {num:'13', name:'T13 DERNIER', type:'MOYENNE', diff:'med', speed:'~145', gear:'3',
+     fr:'Freinage modéré. Trajectoire ouverte. Sortie vers longue ligne droite.'}
+   ]}
+];
+
+/* ── CHECKLIST DATA ── */
+var DEFAULT_CHECK = [
+  {cat:'PRÉ-SESSION', items:[
+    'Pression pneus vérifiée', 'Niveaux huile/eau OK', 'Carburant fait',
+    'Setup noté sur fiche', 'Harnais vérifié', 'Casque et HANS installés',
+    'Radio testée', 'Bouton coupe-circuit testé'
+  ]},
+  {cat:'MENTAL', items:[
+    'Objectifs de session définis', 'Points clés des virages revus',
+    'Hydratation faite', 'Échauffement physique'
+  ]},
+  {cat:'POST-SESSION', items:[
+    'Temps notés', 'Ressentis notés immédiatement', 'Photos/vidéo récupérées',
+    'Débrief avec l\'ingénieur planifié'
+  ]}
+];
+
+/* ── STATE ── */
+var cur = 's-home';
+var hist = [];
+var curCircuit = 0;
+var curVirage = 0;
+var debriefs = [];
+var checkData = [];
+var dfEditing = -1;
+var dfCondition = 'sec';
+var dfStars = 1;
+var dfPoints = {pos:[], neg:[], act:[]};
+var meteoCache = null;
+var meteoCacheTime = 0;
+var meteoCustom = null;
+var notes = {};
+var photos = {};
+var selectedPdfIdx = -1;
+var activePhotoType = 'freinage';
+
+/* ── NAVIGATION ── */
+function goTo(id) {
+  if (id === cur) return;
+  var prev = document.getElementById(cur);
+  var next = document.getElementById(id);
+  if (!next) return;
+  if (prev) prev.classList.remove('active');
+  next.classList.add('active');
+  next.scrollTop = 0;
+  hist.push(cur);
+  cur = id;
+  updateNav(id);
+}
+function goBack() {
+  if (!hist.length) return;
+  var b = hist.pop();
+  var prev = document.getElementById(cur);
+  var next = document.getElementById(b);
+  if (!next) return;
+  if (prev) prev.classList.remove('active');
+  next.classList.add('active');
+  cur = b;
+  updateNav(b);
+}
+function updateNav(id) {
+  var navIds = ['s-home','s-circuits','s-debrief','s-check','s-settings'];
+  var btnIds = ['nav-home','nav-circuits','nav-debrief','nav-check','nav-settings'];
+  for (var i = 0; i < btnIds.length; i++) {
+    var btn = document.getElementById(btnIds[i]);
+    if (!btn) continue;
+    if (navIds[i] === id) btn.classList.add('on');
+    else btn.classList.remove('on');
+  }
+}
+
+/* ── TOAST ── */
+var toastTimer = null;
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { t.classList.remove('show'); }, 2000);
+}
+
+/* ── HAPTIC ── */
+function haptic(type) {
+  if (!window.navigator || !window.navigator.vibrate) return;
+  if (type === 'light') navigator.vibrate(10);
+  else if (type === 'medium') navigator.vibrate(20);
+  else if (type === 'success') navigator.vibrate([10,50,10]);
+  else if (type === 'error') navigator.vibrate([30,30,30]);
+}
+
+/* ── RENDER HOME ── */
+function renderHome() {
+  var d = debriefs.length;
+  var dEl = document.getElementById('stat-debriefs');
+  if (dEl) dEl.textContent = d + ' session' + (d !== 1 ? 's' : '');
+  var cEl = document.getElementById('stat-circuits');
+  if (cEl) cEl.textContent = CIRCUITS.length + ' circuits';
+}
+
+/* ── RENDER CIRCUITS ── */
+function renderCircuits() {
+  var list = document.getElementById('circuits-list');
+  if (!list) return;
+  var html = '';
+  for (var i = 0; i < CIRCUITS.length; i++) {
+    var c = CIRCUITS[i];
+    html += '<div class="circuit-item" onclick="openCircuit(' + i + ')">';
+    html += '<div class="circuit-flag">' + c.flag + '</div>';
+    html += '<div class="circuit-info">';
+    html += '<div class="circuit-name">' + c.name;
+    if (c._custom) html += ' <span style="font-size:9px;background:rgba(232,0,30,.15);color:var(--red);padding:2px 6px;border-radius:4px;font-weight:700;letter-spacing:1px;vertical-align:middle;">PERSO</span>';
+    html += '</div>';
+    html += '<div class="circuit-meta">' + c.country + ' · ' + c.km + ' km · ' + c.turns + ' virages</div>';
+    html += '</div>';
+    if (c._custom) {
+      html += '<button onclick="event.stopPropagation();openCircuitForm(' + i + ')" style="background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;color:var(--t2);font-size:13px;padding:6px 10px;cursor:pointer;margin-right:4px;">✎</button>';
+    }
+    html += '<div class="circuit-arrow">›</div>';
+    html += '</div>';
+  }
+  list.innerHTML = html;
+}
+
+/* ── OPEN CIRCUIT ── */
+function openCircuit(idx) {
+  curCircuit = idx;
+  var c = CIRCUITS[idx];
+  var titleEl = document.getElementById('circuit-title');
+  if (titleEl) titleEl.textContent = c.name;
+
+  /* Show edit/delete buttons for custom circuits */
+  var actEl = document.getElementById('circuit-actions');
+  if (actEl) {
+    if (c._custom) {
+      actEl.innerHTML = '<button class="btn btn-ghost" onclick="openCircuitForm(' + idx + ')" style="padding:7px 12px;font-size:12px;margin-right:4px;">✎</button>'
+        + '<button class="btn btn-ghost" onclick="deleteCircuit(' + idx + ')" style="padding:7px 12px;font-size:12px;color:var(--red);">🗑</button>';
+    } else {
+      actEl.innerHTML = '';
+    }
+  }
+
+  var heroEl = document.getElementById('circuit-hero');
+  if (heroEl) {
+    var heroHtml = '<div class="circuit-hero-name">' + c.flag + ' ' + c.name + '</div>';
+    heroHtml += '<div class="circuit-hero-meta">';
+    heroHtml += '<span class="chip">📏 ' + c.km + ' km</span>';
+    heroHtml += '<span class="chip">↩ ' + c.turns + ' virages</span>';
+    heroHtml += '<span class="chip">⏱ ' + c.record + '</span>';
+    heroHtml += '</div>';
+    heroEl.innerHTML = heroHtml;
+  }
+
+  var vrEl = document.getElementById('circuit-virages');
+  if (vrEl) {
+    var vrHtml = '';
+    for (var i = 0; i < c.virages.length; i++) {
+      var v = c.virages[i];
+      var diffClass = 'diff-med';
+      if (v.diff === 'easy') diffClass = 'diff-easy';
+      else if (v.diff === 'hard') diffClass = 'diff-hard';
+      else if (v.diff === 'trap') diffClass = 'diff-trap';
+      var diffLabel = v.diff === 'easy' ? 'FACILE' : v.diff === 'med' ? 'MOYEN' : v.diff === 'hard' ? 'DIFFICILE' : 'PIÈGE';
+      vrHtml += '<div class="virage-row" onclick="openVirage(' + idx + ',' + i + ')">';
+      vrHtml += '<div class="virage-num">' + v.num + '</div>';
+      vrHtml += '<div class="virage-info">';
+      vrHtml += '<div class="virage-name">' + v.name + '</div>';
+      vrHtml += '<div class="virage-meta">' + v.type + ' · ~' + v.speed + ' km/h · Rapport ' + v.gear + '</div>';
+      vrHtml += '</div>';
+      vrHtml += '<div class="diff-badge ' + diffClass + '">' + diffLabel + '</div>';
+      vrHtml += '</div>';
+    }
+    vrEl.innerHTML = vrHtml;
+  }
+  goTo('s-circuit');
+  haptic('light');
+}
+
+/* ── OPEN VIRAGE ── */
+function openVirage(circIdx, virIdx) {
+  curCircuit = circIdx;
+  curVirage = virIdx;
+  var c = CIRCUITS[circIdx];
+  var v = c.virages[virIdx];
+  var noteKey = c.id + '_' + virIdx;
+
+  var titleEl = document.getElementById('virage-title');
+  if (titleEl) titleEl.textContent = 'V' + v.num;
+
+  var speed = parseInt(v.speed.replace('~','')) || 150;
+  var gear = parseInt(v.gear) || 4;
+  var brakeDist = Math.round(speed * speed / 3000);
+  var gforce = speed > 250 ? '4.5g' : speed > 180 ? '3.8g' : speed > 120 ? '3.0g' : '2.2g';
+
+  var content = document.getElementById('virage-content');
+  if (!content) return;
+
+  var html = '';
+
+  /* Hero */
+  html += '<div class="virage-hero" style="position:relative;">';
+  html += '<div style="font-family:var(--fh);font-size:60px;font-weight:900;color:var(--red);opacity:.12;position:absolute;right:16px;top:10px;line-height:1;">' + v.num + '</div>';
+  html += '<div class="virage-hero-name">' + v.name + '</div>';
+  html += '<div class="virage-hero-circuit">' + c.name + ' · ' + v.type + '</div>';
+  html += '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">';
+  var diffLabel2 = v.diff === 'easy' ? 'FACILE' : v.diff === 'med' ? 'MOYEN' : v.diff === 'hard' ? 'DIFFICILE' : 'PIÈGE';
+  var diffClass2 = 'diff-' + v.diff;
+  html += '<span class="diff-badge ' + diffClass2 + '">' + diffLabel2 + '</span>';
+  html += '</div>';
+  html += '</div>';
+
+  /* KPIs */
+  html += '<div class="kpi-row" style="background:var(--surf);border-bottom:1px solid var(--bdr);">';
+  html += '<div class="kpi-cell"><div class="kpi-val" style="color:var(--red);">' + speed + '</div><div class="kpi-unit">km/h</div></div>';
+  html += '<div class="kpi-cell"><div class="kpi-val" style="color:#4af;">' + gear + '</div><div class="kpi-unit">rapport</div></div>';
+  html += '<div class="kpi-cell"><div class="kpi-val" style="color:#ff9800;">' + brakeDist + '</div><div class="kpi-unit">m frein</div></div>';
+  html += '<div class="kpi-cell"><div class="kpi-val" style="color:var(--green);">' + gforce + '</div><div class="kpi-unit">g-force</div></div>';
+  html += '</div>';
+
+  /* Canvas trajectoire */
+  html += '<div class="sec-lbl" style="padding:14px 16px 0;">TRAJECTOIRE</div>';
+  html += '<div class="canvas-wrap">';
+  html += '<canvas class="draw-canvas" id="draw-canvas" height="160"></canvas>';
+  html += '<div class="draw-toolbar">';
+  html += '<button class="draw-tool on" id="tool-line" onclick="setTool(\'line\')">— Traj.</button>';
+  html += '<button class="draw-tool" id="tool-brake" onclick="setTool(\'brake\')">🛑 Frein</button>';
+  html += '<button class="draw-tool" id="tool-apex" onclick="setTool(\'apex\')">📍 Apex</button>';
+  html += '<button class="draw-tool" onclick="undoDraw()">↩</button>';
+  html += '<button class="draw-tool" onclick="clearDraw()">⊗</button>';
+  html += '</div>';
+  html += '</div>';
+
+  /* Pilotage blocks */
+  html += '<div class="card" style="margin:10px 16px;">';
+  html += '<div class="pil-block">';
+  html += '<div class="pil-head">';
+  html += '<div class="pil-icon" style="background:rgba(232,0,30,.1);">🛑</div>';
+  html += '<div class="pil-title" style="color:var(--red);">Freinage</div>';
+  html += '</div>';
+  html += '<div class="pil-text">' + v.fr + '</div>';
+  html += '</div>';
+
+  /* Notes virage */
+  html += '<div class="pil-block">';
+  html += '<div class="pil-head">';
+  html += '<div class="pil-icon" style="background:rgba(255,214,0,.1);">📝</div>';
+  html += '<div class="pil-title" style="color:var(--gold);">Mes notes</div>';
+  html += '</div>';
+  var savedNote = lsGet('note_' + noteKey) || '';
+  html += '<textarea class="inp" id="virage-note" placeholder="Tes observations personnelles..." style="font-size:13px;" onchange="saveNote(\'' + noteKey + '\')">' + savedNote + '</textarea>';
+  html += '</div>';
+  html += '</div>';
+
+  /* Photos */
+  html += '<div class="sec-lbl" style="padding:0 16px 8px;">PHOTOS</div>';
+  html += '<div class="card" style="margin:0 16px 10px;">';
+  html += '<div class="photo-tabs" id="photo-tabs"></div>';
+  html += '<div class="photo-zone" id="photo-zone"></div>';
+  html += '</div>';
+
+  content.innerHTML = html;
+
+  /* Init canvas */
+  setTimeout(function() {
+    initCanvas(circIdx, virIdx);
+    renderPhotoTabs(circIdx, virIdx);
+    renderPhotoZone(circIdx, virIdx);
+  }, 50);
+
+  goTo('s-virage');
+  haptic('light');
+}
+
+/* ── SAVE NOTE ── */
+function saveNote(key) {
+  var el = document.getElementById('virage-note');
+  if (el) lsSet('note_' + key, el.value);
+}
+
+/* ── CANVAS DRAWING ── */
+var drawState = {};
+var currentTool = 'line';
+
+function getDrawKey(ci, vi) { return ci + '_' + vi; }
+
+function initCanvas(ci, vi) {
+  var canvas = document.getElementById('draw-canvas');
+  if (!canvas) return;
+  var key = getDrawKey(ci, vi);
+  if (!drawState[key]) {
+    var saved = lsGet('draw_' + key);
+    var strokes = [];
+    if (saved) { try { strokes = JSON.parse(saved); } catch(e){} }
+    drawState[key] = { strokes:strokes, drawing:false, lastX:0, lastY:0 };
+  }
+  canvas.width = canvas.offsetWidth * 2;
+  canvas.height = 320;
+  repaint(canvas, key);
+
+  canvas.ontouchstart = function(e) {
+    e.preventDefault();
+    var pos = getPos(canvas, e.touches[0]);
+    drawState[key].drawing = true;
+    drawState[key].lastX = pos.x;
+    drawState[key].lastY = pos.y;
+    if (currentTool === 'apex') {
+      drawState[key].strokes.push({type:'apex', x:pos.x, y:pos.y});
+      repaint(canvas, key);
+      saveDraw(key);
+      drawState[key].drawing = false;
+    } else {
+      drawState[key].strokes.push({type:currentTool, points:[{x:pos.x,y:pos.y}]});
+    }
+  };
+  canvas.ontouchmove = function(e) {
+    e.preventDefault();
+    if (!drawState[key].drawing) return;
+    var pos = getPos(canvas, e.touches[0]);
+    var st = drawState[key].strokes;
+    if (st.length && st[st.length-1].points) {
+      st[st.length-1].points.push({x:pos.x, y:pos.y});
+      repaint(canvas, key);
+    }
+  };
+  canvas.ontouchend = function(e) {
+    e.preventDefault();
+    drawState[key].drawing = false;
+    saveDraw(key);
+  };
+  canvas.onmousedown = function(e) {
+    var pos = getPos(canvas, e);
+    drawState[key].drawing = true;
+    if (currentTool === 'apex') {
+      drawState[key].strokes.push({type:'apex', x:pos.x, y:pos.y});
+      repaint(canvas, key);
+      saveDraw(key);
+      drawState[key].drawing = false;
+    } else {
+      drawState[key].strokes.push({type:currentTool, points:[{x:pos.x,y:pos.y}]});
+    }
+  };
+  canvas.onmousemove = function(e) {
+    if (!drawState[key].drawing) return;
+    var pos = getPos(canvas, e);
+    var st = drawState[key].strokes;
+    if (st.length && st[st.length-1].points) {
+      st[st.length-1].points.push({x:pos.x, y:pos.y});
+      repaint(canvas, key);
+    }
+  };
+  canvas.onmouseup = function(e) {
+    drawState[key].drawing = false;
+    saveDraw(key);
+  };
+}
+
+function getPos(canvas, e) {
+  var r = canvas.getBoundingClientRect();
+  var scaleX = canvas.width / r.width;
+  var scaleY = canvas.height / r.height;
+  return {
+    x: (e.clientX - r.left) * scaleX,
+    y: (e.clientY - r.top) * scaleY
+  };
+}
+
+function repaint(canvas, key) {
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width, h = canvas.height;
+  ctx.fillStyle = '#0d0d16';
+  ctx.fillRect(0, 0, w, h);
+
+  /* Grid */
+  ctx.strokeStyle = 'rgba(255,255,255,.04)';
+  ctx.lineWidth = 1;
+  for (var x = 0; x < w; x += 40) {
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
+  }
+  for (var y = 0; y < h; y += 40) {
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
+  }
+
+  var state = drawState[key];
+  if (!state) return;
+  var strokes = state.strokes;
+  for (var i = 0; i < strokes.length; i++) {
+    var s = strokes[i];
+    if (s.type === 'apex') {
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, 12, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,230,118,.3)';
+      ctx.fill();
+      ctx.strokeStyle = '#00e676';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('A', s.x, s.y);
+    } else if (s.points && s.points.length > 1) {
+      ctx.beginPath();
+      ctx.moveTo(s.points[0].x, s.points[0].y);
+      for (var j = 1; j < s.points.length; j++) {
+        ctx.lineTo(s.points[j].x, s.points[j].y);
+      }
+      if (s.type === 'line') {
+        ctx.strokeStyle = '#ffd600';
+        ctx.lineWidth = 3;
+        ctx.shadowColor = '#ffd600';
+        ctx.shadowBlur = 6;
+      } else if (s.type === 'brake') {
+        ctx.strokeStyle = '#e8001e';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([8,5]);
+        ctx.shadowColor = '#e8001e';
+        ctx.shadowBlur = 6;
+      }
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.shadowBlur = 0;
+    }
+  }
+}
+
+function setTool(tool) {
+  currentTool = tool;
+  var tools = ['line','brake','apex'];
+  for (var i = 0; i < tools.length; i++) {
+    var btn = document.getElementById('tool-' + tools[i]);
+    if (btn) {
+      if (tools[i] === tool) btn.classList.add('on');
+      else btn.classList.remove('on');
+    }
+  }
+  haptic('light');
+}
+
+function undoDraw() {
+  var key = getDrawKey(curCircuit, curVirage);
+  if (!drawState[key]) return;
+  drawState[key].strokes.pop();
+  var canvas = document.getElementById('draw-canvas');
+  if (canvas) repaint(canvas, key);
+  saveDraw(key);
+}
+
+function clearDraw() {
+  var key = getDrawKey(curCircuit, curVirage);
+  if (!drawState[key]) return;
+  drawState[key].strokes = [];
+  var canvas = document.getElementById('draw-canvas');
+  if (canvas) repaint(canvas, key);
+  saveDraw(key);
+}
+
+function saveDraw(key) {
+  var state = drawState[key];
+  if (!state) return;
+  try { lsSet('draw_' + key, JSON.stringify(state.strokes)); } catch(e){}
+}
+
+/* ── PHOTOS ── */
+var PHOTO_TYPES = [
+  {key:'freinage', icon:'🛑', label:'FREINAGE'},
+  {key:'apex',     icon:'📍', label:'APEX'},
+  {key:'sortie',   icon:'🚀', label:'SORTIE'},
+  {key:'general',  icon:'📸', label:'GENERAL'}
+];
+
+function photoKey(ci, vi, type) {
+  return 'photo_' + CIRCUITS[ci].id + '_' + vi + '_' + type;
+}
+
+function renderPhotoTabs(ci, vi) {
+  var tabs = document.getElementById('photo-tabs');
+  if (!tabs) return;
+  var html = '';
+  for (var i = 0; i < PHOTO_TYPES.length; i++) {
+    var pt = PHOTO_TYPES[i];
+    var isActive = pt.key === activePhotoType;
+    var hasPhoto = !!lsGet(photoKey(ci, vi, pt.key));
+    html += '<div class="photo-tab' + (isActive ? ' on' : '') + '" onclick="setPhotoType(\'' + pt.key + '\',' + ci + ',' + vi + ')">';
+    if (hasPhoto) html += '<div class="photo-dot"></div>';
+    html += pt.icon + ' ' + pt.label;
+    html += '</div>';
+  }
+  tabs.innerHTML = html;
+}
+
+function renderPhotoZone(ci, vi) {
+  var zone = document.getElementById('photo-zone');
+  if (!zone) return;
+  var key = photoKey(ci, vi, activePhotoType);
+  var data = lsGet(key);
+  var html = '';
+  if (data) {
+    html += '<div class="photo-preview">';
+    html += '<img src="' + data + '" alt="photo">';
+    html += '<button class="photo-del" onclick="deletePhoto(\'' + key + '\',' + ci + ',' + vi + ')">× Supprimer</button>';
+    html += '</div>';
+  } else {
+    html += '<label class="photo-upload" for="photo-file">';
+    html += '<div class="photo-upload-icon">📷</div>';
+    html += '<div class="photo-upload-text">Ajouter une photo</div>';
+    html += '</label>';
+    html += '<input type="file" accept="image/*" id="photo-file" style="display:none" onchange="handlePhoto(event,\'' + key + '\',' + ci + ',' + vi + ')">';
+  }
+  zone.innerHTML = html;
+}
+
+function setPhotoType(type, ci, vi) {
+  activePhotoType = type;
+  renderPhotoTabs(ci, vi);
+  renderPhotoZone(ci, vi);
+  haptic('light');
+}
+
+function handlePhoto(e, key, ci, vi) {
+  var file = e.target.files && e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var data = ev.target.result;
+    /* Compress */
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var maxW = 800, maxH = 600;
+      var w = img.width, h = img.height;
+      if (w > maxW) { h = h * maxW / w; w = maxW; }
+      if (h > maxH) { w = w * maxH / h; h = maxH; }
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      var compressed = canvas.toDataURL('image/jpeg', 0.7);
+      lsSet(key, compressed);
+      renderPhotoTabs(ci, vi);
+      renderPhotoZone(ci, vi);
+      showToast('Photo ajoutée ✓');
+      haptic('success');
+    };
+    img.src = data;
+  };
+  reader.readAsDataURL(file);
+}
+
+function deletePhoto(key, ci, vi) {
+  lsRem(key);
+  renderPhotoTabs(ci, vi);
+  renderPhotoZone(ci, vi);
+  showToast('Photo supprimée');
+  haptic('medium');
+}
+
+/* ── DEBRIEFING ── */
+function loadDebriefs() {
+  var saved = lsGet('debriefs');
+  if (saved) { try { debriefs = JSON.parse(saved); } catch(e){ debriefs=[]; } }
+  else debriefs = [];
+}
+
+function saveDebriefs() {
+  lsSet('debriefs', JSON.stringify(debriefs));
+}
+
+function renderDebriefs() {
+  var list = document.getElementById('debrief-list');
+  if (!list) return;
+  if (!debriefs.length) {
+    list.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--t3);font-family:var(--fh);font-weight:700;letter-spacing:1px;">AUCUNE SESSION<br><span style="font-size:12px;font-weight:400;">Crée ton premier débrief</span></div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < debriefs.length; i++) {
+    var d = debriefs[i];
+    var stars = '';
+    for (var s = 0; s < 5; s++) stars += s < d.rating ? '★' : '☆';
+    html += '<div class="debrief-card">';
+    html += '<div class="debrief-card-head">';
+    html += '<div><div class="debrief-circuit">' + d.circuit + '</div>';
+    html += '<div class="debrief-date">' + d.date + ' · ' + (d.lap || '—') + '</div></div>';
+    html += '<div class="debrief-stars">' + stars + '</div>';
+    html += '</div>';
+    html += '<div class="debrief-body">';
+    html += '<div class="debrief-tag">' + (d.condition === 'sec' ? '☀ SEC' : d.condition === 'wet' ? '🌧 MOUILLÉ' : '⛅ MIXTE') + '</div>';
+    if (d.pos && d.pos.length) html += '<div class="debrief-tag">+' + d.pos.length + ' positifs</div>';
+    if (d.neg && d.neg.length) html += '<div class="debrief-tag">△' + d.neg.length + ' à améliorer</div>';
+    if (d.act && d.act.length) html += '<div class="debrief-tag">⚙ ' + d.act.length + ' actions</div>';
+    html += '</div>';
+    html += '<div class="debrief-actions">';
+    html += '<button class="btn btn-ghost" style="flex:1;font-size:11px;" onclick="openDebriefForm(' + i + ')">MODIFIER</button>';
+    html += '<button class="btn btn-ghost" style="flex:1;font-size:11px;" onclick="selectPDF(' + i + ')">PDF</button>';
+    html += '<button class="btn btn-ghost" style="padding:10px;font-size:14px;color:var(--red);" onclick="deleteDebrief(' + i + ')">×</button>';
+    html += '</div>';
+    html += '</div>';
+  }
+  list.innerHTML = html;
+}
+
+function openDebriefForm(idx) {
+  dfEditing = idx;
+  dfCondition = 'sec';
+  dfStars = 1;
+  dfPoints = {pos:[], neg:[], act:[]};
+
+  var titleEl = document.getElementById('df-title');
+
+  /* Populate circuit select */
+  var sel = document.getElementById('df-circuit');
+  if (sel) {
+    var selHtml = '';
+    for (var i = 0; i < CIRCUITS.length; i++) {
+      selHtml += '<option value="' + i + '">' + CIRCUITS[i].flag + ' ' + CIRCUITS[i].name + '</option>';
+    }
+    sel.innerHTML = selHtml;
+  }
+
+  /* Set today's date */
+  var dateEl = document.getElementById('df-date');
+  if (dateEl) {
+    var now = new Date();
+    var mm = now.getMonth() + 1;
+    var dd = now.getDate();
+    dateEl.value = now.getFullYear() + '-' + (mm<10?'0':'') + mm + '-' + (dd<10?'0':'') + dd;
+  }
+
+  if (idx >= 0 && debriefs[idx]) {
+    var d = debriefs[idx];
+    if (titleEl) titleEl.textContent = 'Modifier le débrief';
+    if (sel) sel.value = d.circuitIdx !== undefined ? d.circuitIdx : 0;
+    if (dateEl) dateEl.value = d.date || '';
+    var lapEl = document.getElementById('df-lap');
+    if (lapEl) lapEl.value = d.lap || '';
+    dfCondition = d.condition || 'sec';
+    dfStars = d.rating || 1;
+    dfPoints = {
+      pos: d.pos ? d.pos.slice() : [],
+      neg: d.neg ? d.neg.slice() : [],
+      act: d.act ? d.act.slice() : []
+    };
+    var notesEl = document.getElementById('df-notes');
+    if (notesEl) notesEl.value = d.notes || '';
+  } else {
+    if (titleEl) titleEl.textContent = 'Nouveau débrief';
+    var lapEl2 = document.getElementById('df-lap');
+    if (lapEl2) lapEl2.value = '';
+    var notesEl2 = document.getElementById('df-notes');
+    if (notesEl2) notesEl2.value = '';
+  }
+
+  updateConditionUI();
+  updateStarsUI();
+  renderPointsList('pos');
+  renderPointsList('neg');
+  renderPointsList('act');
+  goTo('s-debrief-form');
+}
+
+function setCondition(c) {
+  dfCondition = c;
+  updateConditionUI();
+  haptic('light');
+}
+function updateConditionUI() {
+  var btns = ['sec','wet','mix'];
+  for (var i = 0; i < btns.length; i++) {
+    var b = document.getElementById('cond-' + btns[i]);
+    if (b) {
+      if (btns[i] === dfCondition) b.classList.add('on');
+      else b.classList.remove('on');
+    }
+  }
+}
+
+function setStar(n) {
+  dfStars = n;
+  updateStarsUI();
+  haptic('light');
+}
+function updateStarsUI() {
+  var stars = document.getElementById('df-stars');
+  if (!stars) return;
+  var btns = stars.querySelectorAll('.star-btn');
+  for (var i = 0; i < btns.length; i++) {
+    if (i < dfStars) btns[i].classList.add('on');
+    else btns[i].classList.remove('on');
+  }
+}
+
+function addPoint(type) {
+  var inp = document.getElementById('pts-' + type + '-inp');
+  if (!inp || !inp.value.trim()) return;
+  dfPoints[type].push(inp.value.trim());
+  inp.value = '';
+  renderPointsList(type);
+  haptic('light');
+}
+
+function removePoint(type, idx) {
+  dfPoints[type].splice(idx, 1);
+  renderPointsList(type);
+}
+
+function renderPointsList(type) {
+  var list = document.getElementById('pts-' + type + '-list');
+  if (!list) return;
+  var colors = {pos:'var(--green)', neg:'var(--red)', act:'var(--gold)'};
+  var color = colors[type] || 'var(--t2)';
+  var html = '';
+  for (var i = 0; i < dfPoints[type].length; i++) {
+    html += '<div class="point-item">';
+    html += '<div class="point-dot" style="background:' + color + ';margin-top:5px;"></div>';
+    html += '<div class="point-text">' + dfPoints[type][i] + '</div>';
+    html += '<button class="point-del" onclick="removePoint(\'' + type + '\',' + i + ')">×</button>';
+    html += '</div>';
+  }
+  list.innerHTML = html;
+}
+
+function saveDebrief() {
+  var sel = document.getElementById('df-circuit');
+  var dateEl = document.getElementById('df-date');
+  var lapEl = document.getElementById('df-lap');
+  var notesEl = document.getElementById('df-notes');
+
+  var circuitIdx = sel ? parseInt(sel.value) : 0;
+  var record = {
+    circuitIdx: circuitIdx,
+    circuit: CIRCUITS[circuitIdx] ? CIRCUITS[circuitIdx].name : '',
+    date: dateEl ? dateEl.value : '',
+    lap: lapEl ? lapEl.value : '',
+    condition: dfCondition,
+    rating: dfStars,
+    pos: dfPoints.pos.slice(),
+    neg: dfPoints.neg.slice(),
+    act: dfPoints.act.slice(),
+    notes: notesEl ? notesEl.value : ''
+  };
+
+  if (dfEditing >= 0 && debriefs[dfEditing]) {
+    debriefs[dfEditing] = record;
+  } else {
+    debriefs.unshift(record);
+  }
+  saveDebriefs();
+  renderDebriefs();
+  renderHome();
+  goBack();
+  showToast('Débrief sauvegardé ✓');
+  haptic('success');
+}
+
+function deleteDebrief(idx) {
+  debriefs.splice(idx, 1);
+  saveDebriefs();
+  renderDebriefs();
+  renderHome();
+  showToast('Débrief supprimé');
+  haptic('medium');
+}
+
+/* ── CHECKLIST ── */
+function loadCheck() {
+  var saved = lsGet('checklist');
+  if (saved) { try { checkData = JSON.parse(saved); } catch(e){ checkData = buildDefaultCheck(); } }
+  else checkData = buildDefaultCheck();
+}
+
+function buildDefaultCheck() {
+  var result = [];
+  for (var i = 0; i < DEFAULT_CHECK.length; i++) {
+    var cat = DEFAULT_CHECK[i];
+    var items = [];
+    for (var j = 0; j < cat.items.length; j++) {
+      items.push({label: cat.items[j], done: false, custom: false});
+    }
+    result.push({cat: cat.cat, items: items});
+  }
+  return result;
+}
+
+function saveCheck() {
+  lsSet('checklist', JSON.stringify(checkData));
+}
+
+function renderCheck() {
+  var total = 0, done = 0;
+  for (var i = 0; i < checkData.length; i++) {
+    for (var j = 0; j < checkData[i].items.length; j++) {
+      total++;
+      if (checkData[i].items[j].done) done++;
+    }
+  }
+  var pct = total ? Math.round(done / total * 100) : 0;
+  var bar = document.getElementById('check-bar');
+  var count = document.getElementById('check-count');
+  var pctEl = document.getElementById('check-pct');
+  if (bar) {
+    bar.style.width = pct + '%';
+    bar.style.background = pct === 100 ? 'var(--green)' : 'var(--red)';
+  }
+  if (count) count.textContent = done + '/' + total;
+  if (pctEl) {
+    pctEl.textContent = pct + '%';
+    pctEl.style.color = pct === 100 ? 'var(--green)' : 'var(--red)';
+  }
+
+  var list = document.getElementById('check-list');
+  if (!list) return;
+  var html = '';
+  for (var ci = 0; ci < checkData.length; ci++) {
+    var cat = checkData[ci];
+    html += '<div class="sec-lbl">' + cat.cat + '</div>';
+    for (var ii = 0; ii < cat.items.length; ii++) {
+      var item = cat.items[ii];
+      html += '<div class="check-item" onclick="toggleCheck(' + ci + ',' + ii + ')">';
+      html += '<div class="check-box' + (item.done ? ' done' : '') + '">';
+      if (item.done) html += '<svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
+      html += '</div>';
+      html += '<div class="check-label' + (item.done ? ' done' : '') + '">' + item.label + '</div>';
+      if (item.custom) html += '<button onclick="event.stopPropagation();removeCheckItem(' + ci + ',' + ii + ')" style="background:none;border:none;color:var(--t3);font-size:18px;cursor:pointer;">×</button>';
+      html += '</div>';
+    }
+  }
+  list.innerHTML = html;
+}
+
+function toggleCheck(ci, ii) {
+  if (!checkData[ci] || !checkData[ci].items[ii]) return;
+  checkData[ci].items[ii].done = !checkData[ci].items[ii].done;
+  saveCheck();
+  renderCheck();
+  haptic('light');
+}
+
+function addCheckItem() {
+  var inp = document.getElementById('check-new');
+  if (!inp || !inp.value.trim()) return;
+  var label = inp.value.trim();
+  var found = false;
+  for (var i = 0; i < checkData.length; i++) {
+    if (checkData[i].cat === 'PERSO') {
+      checkData[i].items.push({label:label, done:false, custom:true});
+      found = true; break;
+    }
+  }
+  if (!found) checkData.push({cat:'PERSO', items:[{label:label, done:false, custom:true}]});
+  inp.value = '';
+  saveCheck();
+  renderCheck();
+  haptic('light');
+}
+
+function removeCheckItem(ci, ii) {
+  checkData[ci].items.splice(ii, 1);
+  if (checkData[ci].cat === 'PERSO' && !checkData[ci].items.length) checkData.splice(ci, 1);
+  saveCheck();
+  renderCheck();
+}
+
+function resetCheck() {
+  checkData = buildDefaultCheck();
+  saveCheck();
+  renderCheck();
+  showToast('Checklist réinitialisée');
+  haptic('medium');
+}
+
+/* ── PDF EXPORT ── */
+function selectPDF(idx) {
+  selectedPdfIdx = idx;
+  goTo('s-pdf');
+  renderPDFList();
+}
+
+function renderPDFList() {
+  var list = document.getElementById('pdf-list');
+  if (!list) return;
+  if (!debriefs.length) {
+    list.innerHTML = '<div style="color:var(--t3);font-size:13px;">Aucun débrief disponible.</div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < debriefs.length; i++) {
+    var d = debriefs[i];
+    var isSelected = i === selectedPdfIdx;
+    html += '<div onclick="selectedPdfIdx=' + i + ';renderPDFList();" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr);cursor:pointer;">';
+    html += '<div style="width:20px;height:20px;border-radius:50%;border:2px solid ' + (isSelected?'var(--red)':'var(--bdr2)') + ';background:' + (isSelected?'var(--red)':'transparent') + ';flex-shrink:0;"></div>';
+    html += '<div><div style="font-family:var(--fh);font-size:14px;font-weight:700;">' + d.circuit + '</div>';
+    html += '<div style="font-size:11px;color:var(--t2);">' + d.date + ' · ' + (d.lap||'—') + '</div></div>';
+    html += '</div>';
+  }
+  list.innerHTML = html;
+}
+
+function exportPDF() {
+  if (selectedPdfIdx < 0 || !debriefs[selectedPdfIdx]) {
+    showToast('Sélectionne un débrief');
+    return;
+  }
+  var d = debriefs[selectedPdfIdx];
+  var stars = '';
+  for (var s = 0; s < d.rating; s++) stars += '★';
+
+  var posList = '';
+  for (var i = 0; i < d.pos.length; i++) posList += '<li>' + d.pos[i] + '</li>';
+  var negList = '';
+  for (var i = 0; i < d.neg.length; i++) negList += '<li>' + d.neg[i] + '</li>';
+  var actList = '';
+  for (var i = 0; i < d.act.length; i++) actList += '<li>' + d.act[i] + '</li>';
+
+  var condLabel = d.condition === 'sec' ? 'SEC' : d.condition === 'wet' ? 'MOUILLE' : 'MIXTE';
+
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+  html += '<style>';
+  html += 'body{font-family:Arial,sans-serif;margin:0;padding:0;color:#111;}';
+  html += '.header{background:#08080c;color:#fff;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;}';
+  html += '.logo{font-size:28px;font-weight:900;letter-spacing:3px;}';
+  html += '.logo span{color:#e8001e;}';
+  html += '.meta{font-size:11px;color:#888;text-align:right;line-height:1.6;}';
+  html += '.redbar{height:3px;background:linear-gradient(90deg,#e8001e,#ff4455);}';
+  html += '.grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #eee;margin:16px;}';
+  html += '.cell{padding:12px;border-right:1px solid #eee;text-align:center;}';
+  html += '.cell:last-child{border-right:none;}';
+  html += '.cell-val{font-size:22px;font-weight:900;}';
+  html += '.cell-lbl{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-top:2px;}';
+  html += '.section{margin:16px;background:#f9f9f9;border-radius:8px;padding:14px;border-left:4px solid #ccc;}';
+  html += '.section.pos{border-color:#00a855;}';
+  html += '.section.neg{border-color:#e8001e;}';
+  html += '.section.act{border-color:#b45309;}';
+  html += '.section h3{font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}';
+  html += '.section ul{margin:0;padding-left:16px;}';
+  html += '.section li{font-size:13px;margin:4px 0;line-height:1.5;}';
+  html += '.notes-box{margin:16px;background:#f5f5f5;border-radius:8px;padding:14px;font-size:13px;line-height:1.6;color:#444;}';
+  html += '.footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;padding:8px 24px;display:flex;justify-content:space-between;font-size:10px;color:#aaa;}';
+  html += '@media print{.footer{position:fixed;}}';
+  html += '</style></head><body>';
+
+  html += '<div class="header">';
+  html += '<div class="logo">DRIVE<span>BOOK</span></div>';
+  html += '<div class="meta">N° 21<br>' + d.circuit + '<br>' + d.date + '</div>';
+  html += '</div>';
+  html += '<div class="redbar"></div>';
+
+  html += '<div class="grid">';
+  html += '<div class="cell"><div class="cell-val">' + (d.lap||'—') + '</div><div class="cell-lbl">Meilleur tour</div></div>';
+  html += '<div class="cell"><div class="cell-val" style="color:#e8001e;">' + stars + '</div><div class="cell-lbl">Note session</div></div>';
+  html += '<div class="cell"><div class="cell-val">' + condLabel + '</div><div class="cell-lbl">Conditions</div></div>';
+  html += '<div class="cell"><div class="cell-val">' + (d.pos.length+d.neg.length+d.act.length) + '</div><div class="cell-lbl">Points notés</div></div>';
+  html += '</div>';
+
+  if (d.pos.length) { html += '<div class="section pos"><h3>Points positifs</h3><ul>' + posList + '</ul></div>'; }
+  if (d.neg.length) { html += '<div class="section neg"><h3>A ameliorer</h3><ul>' + negList + '</ul></div>'; }
+  if (d.act.length) { html += '<div class="section act"><h3>Actions ingenieur</h3><ul>' + actList + '</ul></div>'; }
+  if (d.notes) { html += '<div class="notes-box"><strong>Notes libres</strong><br>' + d.notes + '</div>'; }
+
+  html += '<div class="footer"><span>DRIVE BOOK - N 21 - CONFIDENTIEL</span><span>' + new Date().toLocaleDateString('fr-FR') + '</span></div>';
+  html += '<script>window.onload=function(){window.print();};<\/script>';
+  html += '</body></html>';
+
+  var win = window.open('', '_blank', 'width=800,height=1000');
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+    haptic('success');
+  } else {
+    showToast('Autoriser les popups');
+  }
+}
+
+/* ── MÉTÉO ── */
+var WX_ICONS = {0:'☀',1:'🌤',2:'⛅',3:'☁',45:'🌫',48:'🌫',51:'🌦',53:'🌦',55:'🌧',61:'🌧',63:'🌧',65:'🌧',71:'🌨',73:'🌨',75:'❄',80:'🌦',81:'🌧',82:'⛈',95:'⛈',96:'⛈',99:'⛈'};
+var WX_DESC = {0:'Dégagé',1:'Peu nuageux',2:'Partiellement nuageux',3:'Couvert',45:'Brouillard',51:'Bruine légère',61:'Pluie légère',63:'Pluie modérée',65:'Pluie forte',80:'Averses',81:'Fortes averses',95:'Orageux',99:'Violent orage'};
+
+function fetchMeteo() {
+  if (meteoCustom) { fetchMeteoCoords(meteoCustom.lat, meteoCustom.lon, meteoCustom.name); return; }
+  var c = CIRCUITS[curCircuit] || CIRCUITS[0];
+  var coords = getCircuitCoords(c.id);
+  fetchMeteoCoords(coords.lat, coords.lon, c.name);
+}
+
+function getCircuitCoords(id) {
+  var map = {
+    spa:       {lat:50.437,  lon:5.971},
+    ricard:    {lat:43.251,  lon:5.791},
+    silverstone:{lat:52.073, lon:-1.017},
+    lemans:    {lat:47.956,  lon:0.207},
+    barcelona: {lat:41.57,   lon:2.261},
+    portimao:  {lat:37.227,  lon:-8.627}
+  };
+  return map[id] || {lat:48.856, lon:2.352};
+}
+
+function fetchMeteoCoords(lat, lon, name) {
+  var iconEl = document.getElementById('meteo-icon');
+  var locEl  = document.getElementById('meteo-loc');
+  var tempEl = document.getElementById('meteo-temp');
+  var descEl = document.getElementById('meteo-desc');
+  if (iconEl) iconEl.textContent = '⏳';
+  if (locEl)  locEl.textContent  = 'CHARGEMENT...';
+
+  var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon
+    + '&current=temperature_2m,weather_code,wind_speed_10m'
+    + '&wind_speed_unit=kmh&timezone=auto';
+
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        try {
+          var data = JSON.parse(xhr.responseText);
+          var cur = data.current;
+          var code = cur.weather_code;
+          var icon = WX_ICONS[code] || '🌤';
+          var desc = WX_DESC[code] || 'Météo';
+          if (iconEl) iconEl.textContent = icon;
+          if (locEl)  locEl.textContent  = name.toUpperCase();
+          if (tempEl) tempEl.textContent = Math.round(cur.temperature_2m) + '°C';
+          if (descEl) descEl.textContent = desc + ' · Vent ' + Math.round(cur.wind_speed_10m) + ' km/h';
+        } catch(e) {
+          if (iconEl) iconEl.textContent = '📡';
+          if (locEl)  locEl.textContent  = 'ERREUR';
+        }
+      }
+    };
+    xhr.onerror = function() {
+      if (iconEl) iconEl.textContent = '📡';
+      if (locEl)  locEl.textContent  = 'INDISPONIBLE';
+    };
+    xhr.send();
+  } catch(e) {
+    if (iconEl) iconEl.textContent = '📡';
+    if (locEl)  locEl.textContent  = 'INDISPONIBLE';
+  }
+}
+
+function meteoSearch() {
+  var inp = document.getElementById('meteo-inp');
+  if (!inp || !inp.value.trim()) return;
+  var city = inp.value.trim();
+  var locEl = document.getElementById('meteo-loc');
+  var iconEl = document.getElementById('meteo-icon');
+  if (locEl)  locEl.textContent  = 'RECHERCHE...';
+  if (iconEl) iconEl.textContent = '⏳';
+
+  var url = 'https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(city) + '&count=1&language=fr&format=json';
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        try {
+          var data = JSON.parse(xhr.responseText);
+          if (data.results && data.results.length) {
+            var r = data.results[0];
+            meteoCustom = {lat:r.latitude, lon:r.longitude, name:r.name};
+            fetchMeteoCoords(r.latitude, r.longitude, r.name);
+            inp.value = '';
+          } else {
+            if (locEl)  locEl.textContent  = 'INTROUVABLE';
+            if (iconEl) iconEl.textContent = '❓';
+          }
+        } catch(e) {
+          if (locEl) locEl.textContent = 'ERREUR';
+        }
+      }
+    };
+    xhr.onerror = function() {
+      if (locEl)  locEl.textContent  = 'ERREUR RÉSEAU';
+    };
+    xhr.send();
+  } catch(e) {
+    if (locEl)  locEl.textContent  = 'ERREUR RÉSEAU';
+  }
+}
+
+function meteoGPS() {
+  if (!navigator.geolocation) { showToast('GPS non disponible'); return; }
+  var locEl  = document.getElementById('meteo-loc');
+  var iconEl = document.getElementById('meteo-icon');
+  if (locEl)  locEl.textContent  = 'LOCALISATION...';
+  if (iconEl) iconEl.textContent = '⏳';
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      meteoCustom = {lat:pos.coords.latitude, lon:pos.coords.longitude, name:'MA POSITION'};
+      fetchMeteoCoords(pos.coords.latitude, pos.coords.longitude, 'MA POSITION');
+    },
+    function() {
+      if (locEl)  locEl.textContent  = 'GPS REFUSÉ';
+      if (iconEl) iconEl.textContent = '📡';
+      showToast('Autoriser la localisation');
+    },
+    {timeout:8000}
+  );
+}
+
+/* Meteo search on Enter */
+var meteoInp = document.getElementById('meteo-inp');
+if (meteoInp) {
+  meteoInp.onkeydown = function(e) { if (e.keyCode === 13) meteoSearch(); };
+}
+
+/* Check new item on Enter */
+var checkNew = document.getElementById('check-new');
+if (checkNew) {
+  checkNew.onkeydown = function(e) { if (e.keyCode === 13) addCheckItem(); };
+}
+
+/* Point inputs on Enter */
+function bindPointEnter(type) {
+  var inp = document.getElementById('pts-' + type + '-inp');
+  if (inp) inp.onkeydown = function(e) { if (e.keyCode === 13) addPoint(type); };
+}
+bindPointEnter('pos');
+bindPointEnter('neg');
+bindPointEnter('act');
+
+
+/* ═══════════════════════════════════════
+   CUSTOM CIRCUITS — AJOUT / SUPPRESSION
+═══════════════════════════════════════ */
+
+var customCircuits = [];       // circuits créés par l'utilisateur
+var cfEditIdx = -1;            // index circuit en cours d'édition (-1 = nouveau)
+var cfVirages = [];            // virages en cours de construction
+var vfEditIdx = -1;            // index virage en cours d'édition (-1 = nouveau)
+var vfType = 'rapide';
+var vfDiff = 'med';
+
+/* ── LOAD / SAVE CUSTOM CIRCUITS ── */
+function loadCustomCircuits() {
+  /* Apply overrides to built-in circuits */
+  for (var i = 0; i < CIRCUITS.length; i++) {
+    var override = lsGet('circuit_override_' + i);
+    if (override) {
+      try { CIRCUITS[i] = JSON.parse(override); } catch(e) {}
+    }
+  }
+
+  /* Remove hidden built-ins (in reverse to preserve indices) */
+  var hidden = getHiddenBuiltins();
+  hidden.sort(function(a,b){ return b - a; });
+  for (var h = 0; h < hidden.length; h++) {
+    if (CIRCUITS[hidden[h]] && !CIRCUITS[hidden[h]].custom) {
+      CIRCUITS.splice(hidden[h], 1);
+    }
+  }
+
+  /* Load custom circuits */
+  var saved = lsGet('custom_circuits');
+  if (saved) {
+    try {
+      customCircuits = JSON.parse(saved);
+      for (var ci = 0; ci < customCircuits.length; ci++) {
+        CIRCUITS.push(customCircuits[ci]);
+      }
+    } catch(e) { customCircuits = []; }
+  }
+}
+
+function saveCustomCircuits() {
+  lsSet('custom_circuits', JSON.stringify(customCircuits));
+}
+
+/* ── OPEN CIRCUIT FORM ── */
+function openCircuitForm(idx) {
+  cfEditIdx = idx;
+  cfVirages = [];
+
+  var titleEl = document.getElementById('cf-title');
+
+  if (idx >= 0 && CIRCUITS[idx]) {
+    var c = CIRCUITS[idx];
+    if (titleEl) titleEl.textContent = 'Modifier le circuit';
+    var nameEl = document.getElementById('cf-name');
+    var countryEl = document.getElementById('cf-country');
+    var flagEl = document.getElementById('cf-flag');
+    var kmEl = document.getElementById('cf-km');
+    var recEl = document.getElementById('cf-record');
+    if (nameEl)    nameEl.value    = c.name    || '';
+    if (countryEl) countryEl.value = c.country || '';
+    if (flagEl)    flagEl.value    = c.flag    || '';
+    if (kmEl)      kmEl.value      = c.km      || '';
+    if (recEl)     recEl.value     = c.record  || '';
+    cfVirages = [];
+    for (var vi = 0; vi < c.virages.length; vi++) {
+      cfVirages.push(copyVirage(c.virages[vi]));
+    }
+  } else {
+    if (titleEl) titleEl.textContent = 'Nouveau circuit';
+    var fields = ['cf-name','cf-country','cf-flag','cf-km','cf-record'];
+    for (var fi = 0; fi < fields.length; fi++) {
+      var el = document.getElementById(fields[fi]);
+      if (el) el.value = '';
+    }
+    cfVirages = [];
+  }
+
+  renderCfViragesList();
+  goTo('s-circuit-form');
+  haptic('light');
+}
+
+function copyVirage(v) {
+  return {
+    num:   v.num   || '',
+    name:  v.name  || '',
+    type:  v.type  || 'RAPIDE',
+    diff:  v.diff  || 'med',
+    speed: v.speed || '~150',
+    gear:  v.gear  || '4',
+    brake: v.brake || '',
+    fr:    v.fr    || '',
+    notes: v.notes || ''
+  };
+}
+
+/* ── RENDER VIRAGES LIST IN CIRCUIT FORM ── */
+function renderCfViragesList() {
+  var list = document.getElementById('cf-virages-list');
+  if (!list) return;
+  if (!cfVirages.length) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t3);font-size:13px;border:1px dashed var(--bdr);border-radius:12px;">Aucun virage — appuie sur + AJOUTER</div>';
+    return;
+  }
+  var html = '<div class="card" style="margin:0;">';
+  for (var i = 0; i < cfVirages.length; i++) {
+    var v = cfVirages[i];
+    html += '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--bdr);">';
+    html += '<div style="font-family:var(--fh);font-size:20px;font-weight:900;color:var(--red);width:32px;text-align:center;">' + (v.num || (i+1)) + '</div>';
+    html += '<div style="flex:1;">';
+    html += '<div style="font-family:var(--fh);font-size:14px;font-weight:700;text-transform:uppercase;">' + (v.name || 'Virage ' + (i+1)) + '</div>';
+    html += '<div style="font-size:11px;color:var(--t2);">' + (v.type || '') + (v.speed ? ' · ~' + v.speed + ' km/h' : '') + '</div>';
+    html += '</div>';
+    html += '<button onclick="openVirageForm(' + i + ')" style="background:none;border:none;color:var(--t2);font-size:18px;cursor:pointer;padding:4px 6px;">✎</button>';
+    html += '<button onclick="removeVirageFromForm(' + i + ')" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;padding:4px 6px;">×</button>';
+    html += '</div>';
+  }
+  html += '</div>';
+  list.innerHTML = html;
+}
+
+function removeVirageFromForm(idx) {
+  cfVirages.splice(idx, 1);
+  renderCfViragesList();
+  haptic('light');
+}
+
+/* ── SAVE CIRCUIT ── */
+function saveCircuit() {
+  var nameEl    = document.getElementById('cf-name');
+  var countryEl = document.getElementById('cf-country');
+  var flagEl    = document.getElementById('cf-flag');
+  var kmEl      = document.getElementById('cf-km');
+  var recEl     = document.getElementById('cf-record');
+
+  var name = nameEl ? nameEl.value.trim().toUpperCase() : '';
+  if (!name) { showToast('Donne un nom au circuit'); return; }
+  if (!cfVirages.length) { showToast('Ajoute au moins un virage'); return; }
+
+  var circuit = {
+    id:      'custom_' + Date.now(),
+    name:    name,
+    country: countryEl ? countryEl.value.trim() : '',
+    flag:    flagEl    ? flagEl.value.trim()    : '🏁',
+    km:      kmEl      ? kmEl.value             : '0',
+    turns:   cfVirages.length,
+    record:  recEl     ? recEl.value            : '—',
+    custom:  true,
+    virages: cfVirages.slice()
+  };
+
+  if (cfEditIdx >= 0 && CIRCUITS[cfEditIdx]) {
+    /* Update existing — built-in or custom */
+    circuit.id = CIRCUITS[cfEditIdx].id || circuit.id;
+    circuit.custom = CIRCUITS[cfEditIdx].custom || false;
+    CIRCUITS[cfEditIdx] = circuit;
+    /* If custom, update in customCircuits array too */
+    if (circuit.custom) {
+      for (var i = 0; i < customCircuits.length; i++) {
+        if (customCircuits[i].id === circuit.id) {
+          customCircuits[i] = circuit;
+          break;
+        }
+      }
+    } else {
+      /* Built-in modified — save override in localStorage */
+      lsSet('circuit_override_' + cfEditIdx, JSON.stringify(circuit));
+    }
+  } else {
+    /* New circuit */
+    circuit.custom = true;
+    CIRCUITS.push(circuit);
+    customCircuits.push(circuit);
+  }
+
+  saveCustomCircuits();
+  renderCircuits();
+  renderHome();
+  goTo('s-circuits');
+  showToast('Circuit sauvegardé ✓');
+  haptic('success');
+}
+
+/* ── DELETE CIRCUIT ── */
+var _deleteCircuitPending = -1;
+
+function confirmDeleteCircuit(idx) {
+  if (_deleteCircuitPending === idx) {
+    _deleteCircuitPending = -1;
+    deleteCircuit(idx);
+  } else {
+    _deleteCircuitPending = idx;
+    showToast('Appuie encore pour supprimer');
+    haptic('medium');
+    setTimeout(function() { _deleteCircuitPending = -1; }, 3000);
+  }
+}
+
+function deleteCircuit(idx) {
+  if (!CIRCUITS[idx]) return;
+  var c = CIRCUITS[idx];
+
+  if (c.custom) {
+    /* Remove custom from both arrays */
+    CIRCUITS.splice(idx, 1);
+    for (var i = customCircuits.length - 1; i >= 0; i--) {
+      if (customCircuits[i].id === c.id) { customCircuits.splice(i, 1); break; }
+    }
+    saveCustomCircuits();
+  } else {
+    /* Built-in: hide it by saving a tombstone */
+    lsSet('circuit_hidden_' + idx, '1');
+    lsRem('circuit_override_' + idx);
+    CIRCUITS.splice(idx, 1);
+    /* Save list of hidden built-in indices */
+    var hidden = getHiddenBuiltins();
+    hidden.push(idx);
+    lsSet('circuits_hidden', JSON.stringify(hidden));
+  }
+
+  renderCircuits();
+  renderHome();
+  showToast('Circuit supprimé');
+  haptic('medium');
+}
+
+function getHiddenBuiltins() {
+  var saved = lsGet('circuits_hidden');
+  if (saved) { try { return JSON.parse(saved); } catch(e){} }
+  return [];
+}
+
+/* ── VIRAGE FORM ── */
+function openVirageForm(idx) {
+  vfEditIdx = idx;
+  vfType = 'rapide';
+  vfDiff = 'med';
+
+  var titleEl = document.getElementById('vf-title');
+
+  if (idx >= 0 && cfVirages[idx]) {
+    var v = cfVirages[idx];
+    if (titleEl) titleEl.textContent = 'Modifier le virage';
+    setField('vf-num',   v.num   || '');
+    setField('vf-name',  v.name  || '');
+    setField('vf-speed', (v.speed || '').toString().replace('~',''));
+    setField('vf-gear',  v.gear  || '');
+    setField('vf-brake', v.brake || '');
+    setField('vf-fr',    v.fr    || '');
+    setField('vf-notes', v.notes || '');
+    vfType = (v.type || 'RAPIDE').toLowerCase().replace('é','e').replace('è','e').replace('î','i');
+    if (vfType === 'épingle' || vfType === 'epingle') vfType = 'epingle';
+    vfDiff = v.diff || 'med';
+  } else {
+    if (titleEl) titleEl.textContent = 'Nouveau virage';
+    var emptyFields = ['vf-num','vf-name','vf-speed','vf-gear','vf-brake','vf-fr','vf-notes'];
+    for (var i = 0; i < emptyFields.length; i++) setField(emptyFields[i], '');
+    vfType = 'rapide';
+    vfDiff = 'med';
+  }
+
+  updateVirageTypeUI();
+  updateVirageDiffUI();
+  goTo('s-virage-form');
+  haptic('light');
+}
+
+function setField(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.value = val;
+}
+
+function setVirageType(t) {
+  vfType = t;
+  updateVirageTypeUI();
+  haptic('light');
+}
+function updateVirageTypeUI() {
+  var types = ['rapide','moyenne','epingle','chicane'];
+  for (var i = 0; i < types.length; i++) {
+    var btn = document.getElementById('vft-' + types[i]);
+    if (btn) {
+      if (types[i] === vfType) btn.classList.add('on');
+      else btn.classList.remove('on');
+    }
+  }
+}
+
+function setVirageDiff(d) {
+  vfDiff = d;
+  updateVirageDiffUI();
+  haptic('light');
+}
+function updateVirageDiffUI() {
+  var diffs = ['easy','med','hard','trap'];
+  for (var i = 0; i < diffs.length; i++) {
+    var btn = document.getElementById('vfd-' + diffs[i]);
+    if (btn) {
+      if (diffs[i] === vfDiff) btn.classList.add('on');
+      else btn.classList.remove('on');
+    }
+  }
+}
+
+function saveVirageForm() {
+  var numEl   = document.getElementById('vf-num');
+  var nameEl  = document.getElementById('vf-name');
+  var speedEl = document.getElementById('vf-speed');
+  var gearEl  = document.getElementById('vf-gear');
+  var brakeEl = document.getElementById('vf-brake');
+  var frEl    = document.getElementById('vf-fr');
+  var notesEl = document.getElementById('vf-notes');
+
+  var vname = nameEl ? nameEl.value.trim().toUpperCase() : '';
+  if (!vname) { showToast('Donne un nom au virage'); return; }
+
+  var typeLabels = {rapide:'RAPIDE', moyenne:'MOYENNE', epingle:'ÉPINGLE', chicane:'CHICANE'};
+
+  var virage = {
+    num:   numEl   ? numEl.value.trim()   : '',
+    name:  vname,
+    type:  typeLabels[vfType] || 'RAPIDE',
+    diff:  vfDiff,
+    speed: speedEl ? '~' + speedEl.value  : '~150',
+    gear:  gearEl  ? gearEl.value         : '4',
+    brake: brakeEl ? brakeEl.value        : '',
+    fr:    frEl    ? frEl.value           : '',
+    notes: notesEl ? notesEl.value        : ''
+  };
+
+  if (vfEditIdx >= 0) {
+    cfVirages[vfEditIdx] = virage;
+  } else {
+    cfVirages.push(virage);
+  }
+
+  renderCfViragesList();
+  goBack();
+  showToast('Virage ajouté ✓');
+  haptic('success');
+}
+
+
+/* ── INIT ── */
+function init() {
+  loadDebriefs();
+  loadCheck();
+  renderHome();
+  renderCircuits();
+  renderDebriefs();
+  renderCheck();
+  fetchMeteo();
+
+  /* Animated splash progress */
+  var splashBar = document.getElementById('splash-progress');
+  var splashStatus = document.getElementById('splash-status');
+  var splashSteps = [
+    {pct:20, msg:'CHARGEMENT...', delay:100},
+    {pct:45, msg:'CIRCUITS...', delay:300},
+    {pct:70, msg:'PROFIL...', delay:600},
+    {pct:90, msg:'MÉTÉO...', delay:900},
+    {pct:100, msg:'PRÊT', delay:1100}
+  ];
+  for (var si = 0; si < splashSteps.length; si++) {
+    (function(step) {
+      setTimeout(function() {
+        if (splashBar) splashBar.style.width = step.pct + '%';
+        if (splashStatus) splashStatus.textContent = step.msg;
+      }, step.delay);
+    })(splashSteps[si]);
+  }
+
+  /* Hide splash */
+  setTimeout(function() {
+    var splash = document.getElementById('splash');
+    var app = document.getElementById('app');
+    if (splash) {
+      splash.classList.add('splash-exit');
+      setTimeout(function() {
+        splash.style.display = 'none';
+        if (app) app.style.display = 'flex';
+      }, 500);
+    } else {
+      if (app) app.style.display = 'flex';
+    }
+  }, 1500);
+}
+
+/* Service Worker */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    try {
+      navigator.serviceWorker.register('./sw.js').catch(function(){});
+    } catch(e){}
+  });
+}
+
+init();
+</script>
+</body>
+</html>
